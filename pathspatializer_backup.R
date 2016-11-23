@@ -10,6 +10,11 @@
             # and write the route_id, stop_name, and lat lon to a dataframe
             # this is then written as a table in the db schema created in step a
 
+# Attribution: 
+        # huge kudos to the following smart people who helped me figure out this:
+            # PostGIS meets R:  
+            
+
 ##########################################################################################
 
 ### Conditionally install/load needed packages ###
