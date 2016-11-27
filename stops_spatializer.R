@@ -36,9 +36,9 @@ packages_index <- packages[!packages %in% as.character(packages_installed$Packag
 
 if (identical( packages_index, character(0) )) { 
   
-} else { install.packages(packages_index) }
+} else { install.packages( packages_index ) }
 
-for(package in packages) {3
+for(package in packages) {
   
   library( package, character.only = TRUE)
 
@@ -46,15 +46,11 @@ for(package in packages) {3
 
 ##########################################################################################
 
-### a: create postgis db and schema ###
+### a: create postgis db and schemas ###
 
 # get database name
 
 database_name <- readline( prompt = "Provide name of database to create: ")
-
-# get schema name
-
-schema_name <- readline( prompt = "Provide name of schema to create: ")
 
 # create database
 
@@ -75,11 +71,11 @@ postgis_query <- "CREATE EXTENSION postgis;"
 
 dbSendQuery( connection, postgis_query)
 
-# create schema
+# create schema for dir0 and dir1
 
-schema_query <- paste( "CREATE SCHEMA ", schema_name, ";", sep = "" )
+dbSendQuery( connection, "CREATE SCHEMA dir0routes;")
 
-dbSendQuery( connection, schema_query )
+dbSendQuery( connection, "CREATE SCHEMA dir1routes;")
 
 ##########################################################################################
 
@@ -99,71 +95,294 @@ wmata_stops <- fromJSON( txt = system( paste(
   'curl -v -X GET "https://api.wmata.com/Bus.svc/json/jStops" -H "api_key: ',
   key,' "', sep = "" ) , intern=TRUE ))
 
+
+# use list of route names to get list of route details for each route
+
+route_names <- wmata_routes$Routes$RouteID
+
+# initialize empty list to be filled below
+
+wmata_routes_lst <- list()
+
+# loop through all routes, api call for each, extend wmata_routes_lst with output
+
+for( route in route_names ) {
+  
+  wmata_route <- fromJSON( txt = system( paste( 
+    'curl -v -X GET "https://api.wmata.com/Bus.svc/json/jRouteDetails?RouteID=', 
+    route, '"',' -H "api_key: ', key,' "', sep = "" ) , intern=TRUE ))
+  
+  wmata_routes_lst[[ length( wmata_routes_lst ) + 1L ]] <- wmata_route
+  
+}
+
+# make the direction0 and direction1 lists, getting rid of nulls in both. 
+
+# lapply function to make the dir0 list
+
+dir0_wmata_routes <- wmata_routes_lst[ !sapply(
+  
+  seq_along( wmata_routes_lst ),
+  
+  function(i) 
+    {
+    
+    # an if else statement to return index of
+    # items in for those routes with stop geometry objects that aren't null
+      
+    if(is.null(wmata_routes_lst[[i]]$Direction0$Stops)) {
+        
+    } else if(length(wmata_routes_lst[[i]]$Direction0$Stops)>1) {i}
+      
+    }) %in% "NULL" ] 
+  
+# same as above for dir1
+
+dir1_wmata_routes <- wmata_routes_lst[ !sapply(
+  
+  seq_along( wmata_routes_lst ),
+  
+  function(i) 
+  {
+    
+    # an if else statement to return index of
+    # items in for those routes with stop geometry objects that aren't null
+    
+    if(is.null(wmata_routes_lst[[i]]$Direction1$Stops)) {
+      
+    } else if(length(wmata_routes_lst[[i]]$Direction1$Stops)>1) {i}
+    
+  }) %in% "NULL" ]
+
+# make list of these two direction lists, we'll use this for a loop later on. 
+
+dir_wmata_routes_lst <- list( dir0_wmata_routes , dir1_wmata_routes)
+
+names(dir_wmata_routes_lst) <- c( deparse( substitute( dir0_wmata_routes )),
+                                  deparse( substitute( dir1_wmata_routes)))
+
 ##########################################################################################
 
+# Loop over routes in dir0 and dir1 list and do the followings
+    # 1) create a dir0 and dir1 table in wmata_routes db
+    # 2) nest loop in that loop that for both dir0 and dir1:
+      # a) takes first two stops in each to make a data frame including: 
+        # stop_id 
+        # stop_names 
+        # lat,lon
+      # b) write this out to created dir0 or dir1 tab in wmata_routes db
 
-# Loop over RouteIDs in wmata.routes to see which bus stops they pass through, getting
-# index of those bus stops and then using that index to create spatial points data frame
-# with 1) the location of the stop, 2) the id of the stop. 3) the stop name 
-# write these as tables in the stops SCHEMA in wmata_stops 
-
-for( route_id in wmata_routes$Routes$RouteID ) {
+for ( i in 1:length(dir_wmata_routes_lst) ) {
   
-    # get table name being created. b/c I use numeric, needs to in dbl-quotes
+    # get directory schema and route table names 
+    
+    dir_schema <- paste( substring( names(dir_wmata_routes_lst)[i] ,1,4),
+                           "routes", sep = "" )
+      
+    for ( a in 1 : length( dir_wmata_routes_lst[[i]] )) {
+        
+        route_id <- dir_wmata_routes_lst[[i]][[a]]$RouteID
+        
+        route_tab <- paste( shQuote( dir_schema , type = 'cmd'), 
+                            shQuote( route_id, type = 'cmd'), sep = ".")
+        
+        if ( dir_schema == "dir0routes" ) {
+          
+          for ( b in 1: length( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID )) {
+            
+            # get stops at route segment of interest
+            
+            seg_stops_id <- cbind( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID[b],
+                                   dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID[b+1])
+          
+            # get stop names at route segment of interest
+          
+            seg_stops_nams <- cbind( gsub(" ", "_" , 
+                                          dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Name[b]),
+                                     gsub(" ", "_" , 
+                                          dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Name[b+1]))
+          
+            # get stop latlngs at route segment of interest
+          
+            seg_stops_latlngs <- cbind( a_x = dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Lon[b],
+                                        a_y = dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Lat[b],
+                                        b_x = dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Lon[b+1],
+                                        b_y = dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Lat[b+1])
+          
+            # write all segment attributes to dataframe
+          
+            seg_df <- data.frame( seg_stops_id,
+                                  seg_stops_nams,
+                                  seg_stops_latlngs )
+          
+            # coerce clean column names. 
+          
+            names(seg_df) <- c("stop_a_id", "stop_b_id",
+                               "stop_a_nam", "stop_b_nam",
+                               "a_x", "a_y",
+                               "b_x", "b_y")
+          
+          # conditional statement to write table for first statement, then update for all other
+          
+          if ( b = 1 ) {
+            
+            # intialize table, writing first row
+            
+            dbWriteTable( connection,  c( dir_schema , route_id ), seg_df)
+            
+          } else if ( b < length( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID ) - 1 ) {
+            
+            # update the table with new row
+            
+            update_query <-  paste("INSERT INTO ", route_tab, " ",
+                                   "(stop_a_id, stop_b_id, stop_a_nam,",
+                                   "stop_b_nam, a_x, a_y, b_x, b_y) "," VALUES (",
+                                   seg_df$stop_a_id,", ", seg_df$stop_b_id, ", ",
+                                   shQuote(seg_df$stop_a_nam), ", " ,
+                                   shQuote(seg_df$stop_b_nam), ", ",
+                                   seg_df$a_x, ", ", seg_df$a_y, ", ",
+                                   seg_df$b_x, ", ", seg_df$b_y, ");", sep = "")
+            
+            dbSendStatement( connection, update_query )
+            
+            
+          } else if ( b + 1 = length( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID )) {
+            
+              # update the table with the final row 
+            
+              update_query <-  paste( "INSERT INTO ", route_tab, " ",
+                                      "(stop_a_id, stop_b_id, stop_a_nam,",
+                                      "stop_b_nam, a_x, a_y, b_x, b_y) "," VALUES (",
+                                      seg_df$stop_a_id,", ", seg_df$stop_b_id, ", ",
+                                      shQuote(seg_df$stop_a_nam), ", " ,
+                                      shQuote(seg_df$stop_b_nam), ", ",
+                                      seg_df$a_x, ", ", seg_df$a_y, ", ",
+                                      seg_df$b_x, ", ", seg_df$b_y, ");", sep = "")
+              
+              # create line column
+              
+              line_query <- paste( "ALTER TABLE", route_tab, 
+                                   "ADD seg_line Geometry(LINESTRING);",
+                                   sep = " ")
+              
+              dbSendStatement( connection, line_query )
+              
+              # populate seg_line with spatial information
+              
+              spatialize_query <- paste( "UPDATE", route_tab,
+                                         "SET seg_line =",
+                                         "ST_MakeLine(ST_MakePoint(a_x,a_y),",
+                                         "ST_MakePoint(b_x,b_y));",
+                                          sep = " ")
+              
+              dbSendStatement( connection, spatialize_query)
+          }
+        }
+          
+        } else if ( dir_schema == "dir1routes") {
+          
+          for ( c in 1: length( dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$StopID )) {
+            
+            # get stops at route segment of interest
+            
+            seg_stops_id <- cbind( dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$StopID[c],
+                                   dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$StopID[c+1])
+            
+            # get stop names at route segment of interest
+            
+            seg_stops_nams <- cbind( gsub(" ", "_" , 
+                                          dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Name[c]),
+                                     gsub(" ", "_" , 
+                                          dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Name[c+1]))
+            
+            # get stop latlngs at route segment of interest
+            
+            seg_stops_latlngs <- cbind( a_x = dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Lon[c],
+                                        a_y = dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Lat[c],
+                                        b_x = dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Lon[c+1],
+                                        b_y = dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Lat[c+1])
+            
+            # write all segment attributes to dataframe
+            
+            seg_df <- data.frame( seg_stops_id,
+                                  seg_stops_nams,
+                                  seg_stops_latlngs )
+            
+            # coerce clean column names. 
+            
+            names(seg_df) <- c("stop_a_id", "stop_b_id",
+                               "stop_a_nam", "stop_b_nam",
+                               "a_x", "a_y",
+                               "b_x", "b_y")
+            
+            # conditional statement to write table for first statement, then update for all other
+            
+            if ( c = 1 ) {
+              
+              # intialize table, writing first row
+              
+              dbWriteTable( connection,  c( dir_schema , route_id ), seg_df)
+              
+              
+            } else if ( c < length( dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$StopID ) - 1 ) {
+              
+              # update the table with new row
+              
+              update_query <-  paste("INSERT INTO ", route_tab, " ",
+                                   "(stop_a_id, stop_b_id, stop_a_nam,",
+                                   "stop_b_nam, a_x, a_y, b_x, b_y) "," VALUES (",
+                                   seg_df$stop_a_id,", ", seg_df$stop_b_id, ", ",
+                                   shQuote(seg_df$stop_a_nam), ", " ,
+                                   shQuote(seg_df$stop_b_nam), ", ",
+                                   seg_df$a_x, ", ", seg_df$a_y, ", ",
+                                   seg_df$b_x, ", ", seg_df$b_y, ");", sep = "")
+              
+              dbSendStatement( connection, update_query )
+              
+              
+            } else if ( c + 1 = length( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID )) {
+              
+              # update the table with the final row 
+              
+              update_query <-  paste("INSERT INTO ", route_tab, " ",
+                                   "(stop_a_id, stop_b_id, stop_a_nam,",
+                                   "stop_b_nam, a_x, a_y, b_x, b_y) "," VALUES (",
+                                   seg_df$stop_a_id,", ", seg_df$stop_b_id, ", ",
+                                   shQuote(seg_df$stop_a_nam), ", " ,
+                                   shQuote(seg_df$stop_b_nam), ", ",
+                                   seg_df$a_x, ", ", seg_df$a_y, ", ",
+                                   seg_df$b_x, ", ", seg_df$b_y, ");", sep = "")
+              
+              dbSendStatement( connection, update_query )
+              
+              # create line column
+              
+              line_query <- paste("ALTER TABLE", route_tab, 
+                                  "ADD seg_line Geometry(LINESTRING);",
+                                  sep = " ")
+              
+              dbSendStatement( connection, line_query )
+              
+              # populate seg_line with spatial information
+              
+              spatialize_query <- paste("UPDATE", route_tab,
+                                        "SET seg_line =",
+                                        "ST_MakeLine(ST_MakePoint(a_x,a_y),",
+                                        "ST_MakePoint(b_x,b_y));",
+                                        sep = " ")
+              
+              dbSendStatement( connection, spatialize_query)
+              
+              
+              # delete all spatial fields except for the final line field
+            }
+          }
+          
+        }
   
-    route_tab <- paste( schema_name, 
-                        shQuote(route_id, type = "cmd"), 
-                        sep = ".")
-    
+        # reset b and c to 1 for next loops
+        
+        b=1; c=1; a=1
+      }
+}
 
-    # index the wmata_stops to get only those route_id passes through
-  
-    route_index <- grep( route_id , wmata_stops$Stops$Routes )
-    
-    # grab stop id
-    
-    stops_id <- wmata_stops$Stops$StopID[ route_index ]
-    
-    # grab stop names 
-    
-    stops_nam <- wmata_stops$Stops$Name[ route_index ]
-    
-    # make df with lat & lng from json
-    
-    stops_latlng <- cbind( x = wmata_stops$Stops$Lon[ route_index ],
-                           y = wmata_stops$Stops$Lat[ route_index ] )
-    
-    # make stops df, we'll write this next to the postgis db
-    
-    stops_df <- data.frame( stops_id = stops_id,
-                            stops_nam = stops_nam,
-                            stops_latlng )
-    
-    # write the route to the route schema
-    
-    dbWriteTable( connection, 
-                  c( schema_name , route_id ),
-                  stops_df )
-    
-    # make stop_geom column in table to hold point locatoins
-    
-    geom_query <- paste( "ALTER TABLE",
-                         route_tab, 
-                         "ADD COLUMN stop_geom geometry(POINT,4326);",
-                         sep = " " )
-
-    dbSendQuery( connection , geom_query )
-    
-    # take the x, y columns and use them to populate the stop_geom column
-    
-    setgeom_query <- paste( "UPDATE",
-                            route_tab,
-                            "SET stop_geom=ST_SetSRID(ST_MakePoint(x, y), 4326);",
-                            sep = " " )
-
-    dbSendQuery(connection, setgeom_query)
-    
-    # print out successes
-    
-    cat("Made table for route: ", route_id, "\n\n")
-  }
