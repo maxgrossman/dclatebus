@@ -197,11 +197,14 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
           
             # get stop names at route segment of interest
           
-            seg_stops_nams <- cbind( gsub(" ", "_" , 
-                                          dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Name[b]),
-                                     gsub(" ", "_" , 
-                                          dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Name[b+1]))
-          
+            seg_stops_nams <- cbind( gsub("'","_",
+                                          gsub(" ", "_" , 
+                                            dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Name[b])),
+                                     gsub("'","_",
+                                          gsub(" ", "_" , 
+                                            dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Name[b+1]))
+            )
+            
             # get stop latlngs at route segment of interest
           
             seg_stops_latlngs <- cbind( a_x = dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$Lon[b],
@@ -219,18 +222,17 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
           
             names(seg_df) <- c("stop_a_id", "stop_b_id",
                                "stop_a_nam", "stop_b_nam",
-                               "a_x", "a_y",
-                               "b_x", "b_y")
+                               "a_x", "a_y", "b_x", "b_y")
           
           # conditional statement to write table for first statement, then update for all other
           
-          if ( b = 1 ) {
+          if ( b == 1 ) {
             
             # intialize table, writing first row
             
             dbWriteTable( connection,  c( dir_schema , route_id ), seg_df)
             
-          } else if ( b < length( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID ) - 1 ) {
+          } else if ( b > 1 & b < length( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID )) {
             
             # update the table with new row
             
@@ -245,9 +247,12 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
             
             dbSendStatement( connection, update_query )
             
+            # finally for the second to last row we make our spatial lines.
             
-          } else if ( b + 1 = length( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID )) {
-            
+          } else {
+              
+              if ( b == length( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID )) {
+              
               # update the table with the final row 
             
               update_query <-  paste( "INSERT INTO ", route_tab, " ",
@@ -275,11 +280,13 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
                                          "ST_MakePoint(b_x,b_y));",
                                           sep = " ")
               
-              dbSendStatement( connection, spatialize_query)
+              dbSendStatement( connection, spatialize_query )
+              
+              } else { }
+            }
           }
-        }
-          
-        } else if ( dir_schema == "dir1routes") {
+            
+        } else if ( dir_schema == "dir1routes" ) {
           
           for ( c in 1: length( dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$StopID )) {
             
@@ -290,10 +297,13 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
             
             # get stop names at route segment of interest
             
-            seg_stops_nams <- cbind( gsub(" ", "_" , 
-                                          dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Name[c]),
-                                     gsub(" ", "_" , 
-                                          dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Name[c+1]))
+            seg_stops_nams <- cbind( gsub("'","_",
+                                          gsub(" ", "_" , 
+                                               dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Name[c])),
+                                     gsub("'","_",
+                                          gsub(" ", "_" , 
+                                               dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$Name[c+1]))
+            )
             
             # get stop latlngs at route segment of interest
             
@@ -312,20 +322,19 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
             
             names(seg_df) <- c("stop_a_id", "stop_b_id",
                                "stop_a_nam", "stop_b_nam",
-                               "a_x", "a_y",
-                               "b_x", "b_y")
+                               "a_x", "a_y", "b_x", "b_y")
             
             # conditional statement to write table for first statement, then update for all other
             
-            if ( c = 1 ) {
+            if ( c == 1 ) {
               
               # intialize table, writing first row
               
               dbWriteTable( connection,  c( dir_schema , route_id ), seg_df)
               
               
-            } else if ( c < length( dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$StopID ) - 1 ) {
-              
+            } else if ( c > 1 & c < length( dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$StopID ) - 1 ) {
+
               # update the table with new row
               
               update_query <-  paste("INSERT INTO ", route_tab, " ",
@@ -340,7 +349,9 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
               dbSendStatement( connection, update_query )
               
               
-            } else if ( c + 1 = length( dir_wmata_routes_lst[[i]][[a]]$Direction0$Stops$StopID )) {
+            } else {
+              
+              if ( c == length(dir_wmata_routes_lst[[i]][[a]]$Direction1$Stops$StopID) - 1 ) {
               
               # update the table with the final row 
               
@@ -373,16 +384,14 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
               
               dbSendStatement( connection, spatialize_query)
               
-              
-              # delete all spatial fields except for the final line field
+              } else {}
+             
             }
           }
-          
         }
-  
-        # reset b and c to 1 for next loops
-        
-        b=1; c=1; a=1
-      }
+    }
 }
+          
+
+
 
