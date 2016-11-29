@@ -15,8 +15,7 @@
 ### Conditionally install/load needed packages ###
 
 # list of packages used in script
-packages <- c( "jsonlite", "rgdal", "rgeos", 
-               "raster", "maptools", "RPostgreSQL" )
+packages <- c( "jsonlite", "RPostgreSQL" )
 
 # coerce response from installed.packages() to be clean data.frame of packages installed
 packages_installed <- as.data.frame( installed.packages()[,c(1,3:4)] )
