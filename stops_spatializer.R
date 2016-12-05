@@ -117,7 +117,7 @@ for( route in route_names ) {
 
 # make the direction0 and direction1 lists, getting rid of nulls in both. 
 
-# lapply function to make the dir0 list
+# lapply function to make the dir0 list; which goes north and east 
 
 dir0_wmata_routes <- wmata_routes_lst[ !sapply(
   
@@ -135,7 +135,21 @@ dir0_wmata_routes <- wmata_routes_lst[ !sapply(
       
     }) %in% "NULL" ] 
   
-# same as above for dir1
+# then change the name of the route to have either w or s for directions
+
+dir0_wmata_routes <- dir0_wmata_routes[ sapply(
+  
+  seq_along( dir0_wmata_routes ),
+  
+  function(i)
+  {
+    if( dir0_wmata_routes[[i]]$Direction0 == "WEST" )
+    
+  }
+  
+)]
+
+# same as above for dir1; which is south and west
 
 dir1_wmata_routes <- wmata_routes_lst[ !sapply(
   
