@@ -1,6 +1,8 @@
-require(leaflet)
+# extra-ordinarily unfinished an undocumented
+# prototype script for how I might go about getting route data from 
+# db and visualize it
 
-
+require(mapview,rposgresql,rgrdal)
 
 query_for_needed <- paste("SELECT a_x,a_y,b_x,b_y from ", shQuote( "dir0routes" , type = 'cmd'), ".",
                           shQuote( "10A", type = 'cmd'), " ;",sep="")
