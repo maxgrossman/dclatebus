@@ -83,7 +83,9 @@ dbSendQuery( connection, "CREATE SCHEMA dir1routes;")
 
 ### b: call api for routes and stops ###
 
-key <- readline( prompt = "Provide API Key: ")
+#key <- readline( prompt = "Provide API Key: ")
+
+key <- "dd7ff89ac1744089adfa326205e723b4"
 
 # call routes api from cmd, save to wmata.routes with fromJSON. makes list with many nested lists
 
