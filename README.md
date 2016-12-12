@@ -1,8 +1,6 @@
 # dclatebus
 
-Project using wmata api to classify and visualize bus routes per their lateness.
-
-Extracting data and loading into db with R, thinking d3 or some d3 package in R to viz.
+Project using wmata api to extract and visualize bus lateness at different segments along DC Bus routes.
 
 Check out the api, it rules. 
 https://developer.wmata.com/docs/services/
