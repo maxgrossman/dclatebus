@@ -1,0 +1,9 @@
+# R leftovers, yum. #
+##########
+.Rapp.history
+.Rhistory
+
+
+# OS generated files #
+.DS_Store
+.DS_Store?
