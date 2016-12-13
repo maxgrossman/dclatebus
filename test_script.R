@@ -1,20 +1,33 @@
-# extra-ordinarily unfinished an undocumented
-# prototype script for how I might go about getting route data from 
-# db and visualize it
+require(mapview)
 
-require(mapview,rposgresql,rgrdal)
-
-query_for_needed <- paste("SELECT a_x,a_y,b_x,b_y from ", shQuote( "dir0routes" , type = 'cmd'), ".",
+# Query to db, creating df
+query_for_needed <- paste("SELECT St_AsText(seg_line) from ", shQuote( "dir0routes" , type = 'cmd'), ".",
                           shQuote( "10A", type = 'cmd'), " ;",sep="")
 
 rs = dbSendQuery(connection,query_for_needed)
+
 df = fetch(rs,n=-1)
+
+# iterate through df, converting to line dataframe, grabbing then the lat/lng into a dataframe and add to 
+# list, then use reduce and merge to make them one big dataframe.
+
+line.dfs <- list()
+
+for(i in 1:length(df[,1])) {
+  line <- readWKT(df[i,1])
+  line.pts <- as.data.frame(as(line, "SpatialPointsDataFrame"))[,4:5]
+  line.dfs[[length(line.dfs)+1L]]<-line.pts
+}
+
+line.pts.df <- Reduce(function(x,y) merge(x,y, all=TRUE), line.dfs)
+
 # quickly make map 
 
-x <- list()
-y <- list()
+# make list where every 2 elements is the same random string so I can group points into 
+# a line. Will have to make this a bit more complicated when trying to create lines
+# with different lenght lines.
 
-blank_list <- list()
+x <- list(); y <- list(); blank_list <- list()
 
 for( i in seq(1:55) ) {
   x <- stri_rand_strings(1, length=2, pattern = "[A-Za-z0-9]")
@@ -22,6 +35,7 @@ for( i in seq(1:55) ) {
   blank_list[[length(blank_list)+1L]] <- c(x,y)
 }
 
+# Make two lists where lat and lon for nodes along a line are consecutive
 
 x_ <- list()
 y_ <- list()
