@@ -65,6 +65,7 @@ drv <- dbDriver("PostgreSQL")
 connection <- dbConnect( drv = drv,
                          dbname = database_name,
                          host = "localhost",
+                         ##passward = 
                          port = 5432 )
 
 # make it a PostGIS db
