@@ -1,6 +1,7 @@
 ##########################################################################################
 # Programmer: Maximus
-# Purpose: Create SPDF and geojson of WMATA bus routes and each route's stops. 
+# Name: RoutesSpatializer.R
+# Purpose: Create SPDF and geojson of WMATA bus routes and each route's segments between stops 
          # This will be used for viz later
 # Method: 
         # a: create PostGIS db and schema to write route stop geom to.
@@ -12,6 +13,12 @@
             # here for each route I make a table where rows represent two consecutive
             # stops and their spatial information - both lat,lng for stops and
             # a line string for connecting both 
+        # D: Separate DC Bus Route GeoJSON for dir0 (N and E), dir1 (S and W) 
+        # E: Iterate via loop with nested loops:
+          # 1) Exracting points for each Bus Route
+          # 2) For each unique segment in DB representation of each bus route
+            # i) buffer endpoints and select points from Bus Route with said buffer
+            # ii) take points from Bus Routes selected and generate new line segment and write to DB
 
 ##########################################################################################
 
