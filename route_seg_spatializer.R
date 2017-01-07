@@ -186,8 +186,8 @@ dir1_wmata_routes <- wmata_routes_lst[ !sapply(
 
 dir_wmata_routes_lst <- list( dir0_wmata_routes , dir1_wmata_routes)
 
-names(dir_wmata_routes_lst) <- c( deparse( substitute( dir0_wmata_routes )),
-                                  deparse( substitute( dir1_wmata_routes)))
+names(dir_wmata_routes_lst) <- c( "dir0routes",
+                                  "dir1routes")
 
 ##########################################################################################
 
@@ -204,8 +204,7 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
   
     # get directory schema and route table names 
     
-    dir_schema <- paste( substring( names(dir_wmata_routes_lst)[i] ,1,4),
-                           "routes", sep = "" )
+    dir_schema <- paste( substring( names(dir_wmata_routes_lst)[i] ,1,4),"routes", sep = "" )
       
     for ( a in 1:length( dir_wmata_routes_lst[[i]] ) ) {
       
@@ -560,7 +559,7 @@ for ( i in 1:length(dir_wmata_routes_lst) ) {
               
               # create segment_id
               
-              segment_id <- paste( dir_wmata_routes_lst[[i]][[a]]$RouteID, sprintf("%02d",b), sep = "_")
+              segment_id <- paste( dir_wmata_routes_lst[[i]][[a]]$RouteID, sprintf("%02d",c), sep = "_")
               
               # get stops at route segment of interest
               
