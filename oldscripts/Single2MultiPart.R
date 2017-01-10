@@ -1,6 +1,6 @@
-##########################################################################################
+.##########################################################################################
 # Programmer: Maximus
-# Title: Route2RouteSegs.R
+# Title: Single2MultiPart.R
 # Purpose: Split DC Bus Routes into and write back to db as multiline-polygons. 
 # Method: 
     # a: Separate DC Bus Route GeoJSON for dir0 (N and E), dir1 (S and W) 

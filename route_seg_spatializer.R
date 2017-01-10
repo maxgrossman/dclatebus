@@ -1,6 +1,6 @@
 ##########################################################################################
 # Programmer: Maximus
-# Name: RoutesSpatializer.R
+# Name: route_seg_spatializerr.R
 # Purpose: Create SPDF and geojson of WMATA bus routes and each route's segments between stops 
          # This will be used for viz later
 # Method: 

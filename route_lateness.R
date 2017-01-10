@@ -1,10 +1,45 @@
 ##########################################################################################
 # Programmer: Maximus
+# Name: route_lateness
 # Purpose: Create time stamped dataframe for bus lateness 
 # Method: 
 # a: connect with database, created in stops_spatializer.R
 # b: call api to get deviation from schedule for each route
-# c: add results to df, add to named talbe in deviation schema. 
+# c: spatial query busses with buffered segs. write bus data to segs. which in detail is to:
+  # iterate over deviations_lst and do the following:
+  
+    # get db schema name
+    # initialize dir_bus_list, holding lists for each bus route that hold segment ids for segs busses are on, their deviation, and datetime
+    # iterate over each item in deviations_lst[[i]]
+      # grab seg_ids and seg_geoms for route and save to route_df
+      # select busses from deviation_lst[[i]] along route deviation_lst[[i]]$RouteID[j]
+      # init bus_lst and seg_lst. bus_lst holds seg ids for segs busses are on, their deviation, and datetime. seg_id the seg ids for busses 
+      # for each segment in route_df
+        # spatialize the seg_geom linestring text
+        # buffer the segment by 50 feet, passing a FLAT cap style, meaning the buffer is only parallel to the line's segment
+        # select bus points wihtin the buffer
+        # if buffer selects points do the following for each selected point
+        # add segment id, the deviation, bus_id, date time, and row number to bus_lst. add seg_id to bus_lst
+          # note the reason for adding row number is that it helps populate max_busses, which the max number of busses 
+          # held by all segments within bus_lst. This number, max_busses is later added to max_busses_lst. From max_busses_lst
+          # the maximum value, and resaving it to max_busses. This then represent the greatest number of busses
+          # selected by any given bus route segment. This number is the used to create the deviation, bus_id, and datetime
+          # columns. then the row_number element is used to guide each element in bus_lst to the correct column. 
+        # if the length of the bus_lst is 0, suggesting no busses were selected by the route, then go to the next route
+        # else, change the datetime reported by wmata to a format matching that acceted b postgresql
+        # add bus_lst to dir_bus_lst
+        # find max_busses by selecting max number of repeting segment ids in seg_lst
+        # add max_busses to max_busses_lst
+      # generate base column name for deviation, busid, and datetime
+        # find maximum max_value with max_busses_list and iterate over it to make that many column for the three columns of interest
+      # iterate over dir_bus_lst and dp the following
+        # for each element in dir_bus_lst[[j]]
+        # save dir_bus_lst[[j]] to bus_lst
+        # save deviation_lst[[i]]$RouteID[j] to route_id
+        # generate route_tab with the dir_schema and route_id
+        # for each item in bus_lst
+        # Use 5th element in current bus_lst item to create column names to which data should be saved
+        # save element data to database
 
 ##########################################################################################
 
@@ -126,41 +161,6 @@ wmata_deviations_dir1 <- wmata_deviations_dir1[unlist(db_dir1_routes_index),]
 deviations_lst <- list(wmata_deviations_dir0, wmata_deviations_dir1)
 
 names(deviations_lst) <- c("dir0routes", "dir1routes")
-
-# iterate over deviations_lst and do the following:
-
-  # get db schema name
-  # initialize dir_bus_list, holding lists for each bus route that hold segment ids for segs busses are on, their deviation, and datetime
-  # iterate over each item in deviations_lst[[i]]
-    # grab seg_ids and seg_geoms for route and save to route_df
-    # select busses from deviation_lst[[i]] along route deviation_lst[[i]]$RouteID[j]
-    # init bus_lst and seg_lst. bus_lst holds seg ids for segs busses are on, their deviation, and datetime. seg_id the seg ids for busses 
-    # for each segment in route_df
-      # spatialize the seg_geom linestring text
-      # buffer the segment by 50 feet, passing a FLAT cap style, meaning the buffer is only parallel to the line's segment
-      # select bus points wihtin the buffer
-      # if buffer selects points do the following for each selected point
-        # add segment id, the deviation, bus_id, date time, and row number to bus_lst. add seg_id to bus_lst
-          # note the reason for adding row number is that it helps populate max_busses, which the max number of busses 
-          # held by all segments within bus_lst. This number, max_busses is later added to max_busses_lst. From max_busses_lst
-          # the maximum value, and resaving it to max_busses. This then represent the greatest number of busses
-          # selected by any given bus route segment. This number is the used to create the deviation, bus_id, and datetime
-          # columns. then the row_number element is used to guide each element in bus_lst to the correct column. 
-      # if the length of the bus_lst is 0, suggesting no busses were selected by the route, then go to the next route
-      # else, change the datetime reported by wmata to a format matching that acceted b postgresql
-      # add bus_lst to dir_bus_lst
-      # find max_busses by selecting max number of repeting segment ids in seg_lst
-      # add max_busses to max_busses_lst
-    # generate base column name for deviation, busid, and datetime
-    # find maximum max_value with max_busses_list and iterate over it to make that many column for the three columns of interest
-    # iterate over dir_bus_lst and dp the following
-      # for each element in dir_bus_lst[[j]]
-        # save dir_bus_lst[[j]] to bus_lst
-        # save deviation_lst[[i]]$RouteID[j] to route_id
-        # generate route_tab with the dir_schema and route_id
-        # for each item in bus_lst
-          # Use 5th element in current bus_lst item to create column names to which data should be saved
-          # save element data to database
 
 for (i in 1:length(deviations_lst)) {
   
@@ -361,8 +361,7 @@ for (i in 1:length(deviations_lst)) {
   
 }
 
-
-
+quit( save = "no")
 
   
   
