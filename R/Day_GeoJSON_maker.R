@@ -57,7 +57,7 @@ msp <- "+proj=lcc +lat_1=38.3 +lat_2=39.45 +lat_0=37.66666666666666 +lon_0=-77 +
 
 # get name of database
 
-database_name <- "wmata_routes"
+database_name <- "wmata_routes_temp"
 
 # set up driver and connect to database
 

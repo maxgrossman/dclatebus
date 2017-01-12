@@ -4,4 +4,5 @@
 # and writes bus data, specifically bus id, deviation from schedule, and timestamp
 # to database
 
-usr/local/bin/Rscript route_lateness.R
+# run route_lateness
+/usr/local/bin/Rscript /Users/maxgrossman/github/maxgrossman/dclatebus/R/route_lateness.R
