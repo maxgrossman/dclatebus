@@ -1,8 +1,7 @@
 #!/bin/zsh
-# write today's database to csv, delete today's database, initialize tomorrow's database
+# bash file called via daemon manager (lingon x) to call wmata api every 90 seconds
+# The r script it runs grabs bus data, queries their location along bus routes
+# and writes bus data, specifically bus id, deviation from schedule, and timestamp
+# to database
 
-psql -d wmata_routes
-
-\copy (SELECT * FROM "dir0routes") TO 
-"/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir0routes.csv" 
-DELIMITER ',' CSV HEADER;
+usr/local/bin/Rscript route_lateness.R
