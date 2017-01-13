@@ -193,7 +193,7 @@ for( i in 1:length(db_dir_routes)) {
             
             bus_val <- shQuote("null", type <- "cmd")
             
-          } else { bus_val <- route_dev[k,m+1] }
+          } else { bus_val <- route_bus[k,m+1] }
           
           if ( route_time[k,m+1] %in% NA ) {
             
@@ -251,50 +251,66 @@ for( i in 1:length(db_dir_routes)) {
         
         if( k < length(as.character(seq_along(deviations_json_elements)[bool_lst])) ) {
           
-          deviations_feature_values <-   paste(
-            paste(
-              deviations_json_elements[
-                as.numeric( as.character(seq_along(deviations_json_elements)[bool_lst])[k]):
-                  (as.numeric(as.character(seq_along(deviations_json_elements)[bool_lst])[k+1])-1)],
-              collapse=" , "), ",", sep = "")
+          deviations_features <- deviations_json_elements[as.numeric( as.character(seq_along(deviations_json_elements)[bool_lst])[k]):
+                                                         (as.numeric(as.character(seq_along(deviations_json_elements)[bool_lst])[k+1])-1)]
           
-          buses_feature_values <-paste(
-            paste(
-              buses_json_elements[
-                as.numeric( as.character(seq_along(buses_json_elements)[bool_lst])[k]):
-                  (as.numeric(as.character(seq_along(buses_json_elements)[bool_lst])[k+1])-1)],
-              collapse=" , "), ",", sep = "")
+          deviations_features <- deviations_features[grep("null",deviations_features, invert = TRUE)]
           
-          times_feature_values <- paste(
-            times_json_elements[
-              as.numeric( as.character(seq_along(times_json_elements)[bool_lst])[k]):
-                (as.numeric(as.character(seq_along(times_json_elements)[bool_lst])[k+1])-1)],
-            collapse=" , ")
+          deviations_feature_values <-   paste (paste( deviations_features, collapse=" , "), ",", sep = "")
+          
+          buses_features <- buses_json_elements[as.numeric( as.character(seq_along(buses_json_elements)[bool_lst])[k]):
+                                               (as.numeric(as.character(seq_along(buses_json_elements)[bool_lst])[k+1])-1)]
+          
+          buses_features <- buses_features[grep("null", buses_features, invert = TRUE)]
+          
+          buses_feature_values <-paste( paste(buses_features, collapse=" , "), ",", sep = "")
+          
+          times_features <- times_json_elements[as.numeric( as.character(seq_along(times_json_elements)[bool_lst])[k]):
+                                               (as.numeric(as.character(seq_along(times_json_elements)[bool_lst])[k+1])-1)]
+          
+          times_features <- times_features[grep("null", times_features, invert = TRUE)]
+          
+          times_feature_values <- paste(times_features, collapse=" , ")
+          
         } else {
           
-          deviations_feature_values <-   paste(
-            paste(
-              deviations_json_elements[
-                as.numeric( as.character(seq_along(deviations_json_elements)[bool_lst])[k]):
-                  length(seq_along(deviations_json_elements))],
-              collapse=" , "), ",", sep = "")
+          deviations_features <- deviations_json_elements[as.numeric( as.character(seq_along(deviations_json_elements)[bool_lst])[k]):
+                                                          length(seq_along(deviations_json_elements))]
           
-          buses_feature_values <-paste(
-            paste(
-              buses_json_elements[
-                as.numeric( as.character(seq_along(buses_json_elements)[bool_lst])[k]):
-                  length(seq_along(buses_json_elements))],
-              collapse=" , "), ",", sep = "")
+          deviations_features <- deviations_features[grep("null",deviations_features, invert = TRUE)]
           
-          times_feature_values <- paste(
-            times_json_elements[
-              as.numeric( as.character(seq_along(times_json_elements)[bool_lst])[k]):
-                length(seq_along(times_json_elements))],
-            collapse=" , ")
+          deviations_feature_values <-   paste(paste(deviations_features,collapse=" , "), ",", sep = "")
+          
+          buses_features <- buses_json_elements[as.numeric( as.character(seq_along(buses_json_elements)[bool_lst])[k]):
+                                                length(seq_along(buses_json_elements))]
+          
+          buses_features <- buses_features[grep("null", buses_features, invert = TRUE)]
+          
+          buses_feature_values <-paste(paste(buses_features ,collapse=" , "), ",", sep = "")
+          
+          times_features <- times_json_elements[as.numeric( as.character(seq_along(times_json_elements)[bool_lst])[k]):
+                                                length(seq_along(times_json_elements))]
+          
+          times_features <- times_features[grep("null", times_features, invert = TRUE)]
+          
+          times_feature_values <- paste(times_features,collapse=" , ")
           
         }
         
-        properties_lst[[ length(properties_lst) + 1L ]] <- paste(seg_id_feature_value, deviations_feature_values, buses_feature_values, times_feature_values)
+        if( length(buses_features) == 0 ) {
+          
+          properties_lst[[ length(properties_lst) + 1L ]] <- paste(seg_id_feature_value, 
+                                                                   paste(shQuote(paste(Sys.Date(), '_dev', sep =""), type = "cmd"), ' : ', shQuote('null', type="cmd"), " ,", sep=""),
+                                                                   paste(shQuote(paste(Sys.Date(), '_bus', sep =""), type = "cmd"), ' : ', shQuote('null', type="cmd"), " ,", sep=""),
+                                                                   paste(shQuote(paste(Sys.Date(), '_dev', sep =""), type = "cmd"), ' : ', shQuote('null', type="cmd"), sep=""))
+          
+        } else {
+          
+          properties_lst[[ length(properties_lst) + 1L ]] <- paste(seg_id_feature_value, deviations_feature_values, buses_feature_values, times_feature_values)
+          
+        }
+        
+        
         
         geom_lst[[ length(geom_lst) + 1L ]] <- seg_feature_geom
         
@@ -306,7 +322,9 @@ for( i in 1:length(db_dir_routes)) {
         
         file_path <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir0routes/",route_id,".geojson", sep = "")
         
-      } else {
+      }  
+      
+      if ( dir_schema == "dir1routes") {
         
         file_path <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir1routes/",route_id,".geojson", sep = "")
         
