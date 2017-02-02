@@ -1,0 +1,656 @@
+<!doctype html>
+
+<html lang="en">
+    
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>dclatebus</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css"/>
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" type="text/css">
+        <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+        <script src="js/leaflet.SliderControl.min.js"></script>
+        
+
+        <style>
+            
+            * {
+                
+                outline:none;
+            }
+            
+            body {
+                
+                margin: 0;
+                padding: 0;
+                
+            }
+            
+            #header {
+                background-color: rgba(57,57,57,.65);
+                border-radius: 4px;
+                box-shadow: 0 0 15px  rgba(0,0,0,.5);
+                height:220px;
+                left: 10px; 
+                margin-top: 15px;
+                position:absolute;
+                width: 150px;
+                z-index: 1;
+            
+            }
+            
+            .header_el {
+                padding-left: 10px;
+                color: rgba(250,250,250,1);
+                font-size: 12px;
+                font-family: Arial;
+                margin: 0;
+                float: left;
+
+            }
+            
+            .header_el #button {
+                border: none;
+                border-radius: 4px;
+                margin: 15px 0 25px 0;
+                background: rgba(250,250,250,.3);
+                color: rgba(255,255,255,1);
+                font-size: 12px;
+                width: 55px;
+            }
+            
+            .header_el #button:hover {
+                
+                background: rgba(250,250,250,.6);
+
+            }
+        
+            
+            .dropdown_lst {
+                
+                background: rgba(250,250,250,.3);
+                border: none;
+                color: rgba(255,255,255,1);
+                width:125px;
+            }
+            
+            .dropdown_lst:hover {
+                
+                background: rgba(250,250,250,.6);
+            }
+            
+            #map {
+                
+                background-color: #def;
+                bottom: 0;
+                position:absolute;
+                top: 0;
+                width: 100%;
+                z-index: -1;
+                
+            }
+
+            .lateness_info {
+                background-color: rgba(57,57,57,.65);
+                border-radius: 4px;
+                box-shadow: 0 0 15px  rgba(0,0,0,.5);
+                color: rgba(250,250,250,1);
+                padding: 6px 8px;   
+                top: 5px;
+            }
+            
+            .lateness_info h4 {
+                font: 16px Arial;
+                margin: 0 0 5px;
+                
+            }
+            
+            .lateness_info p {
+                font: 11px Arial;
+                margin: 0 0 5px;
+                
+            }
+            
+            @media screen and (max-height:575px) {
+                
+                .lateness_info { bottom:20px; }
+                
+            }
+            
+            .slider_selector {
+                background-color: rgba(57,57,57,.65);
+                border-radius: 4px;
+                box-shadow: 0 0 15px  rgba(0,0,0,.5);
+                height:95px;
+                right: 30px; 
+                top: 15px;
+                position:absolute;
+                width: 150px;
+                z-index: 0;
+            
+            }
+            
+            #slidecont {
+                width:100%;
+                position: relative;
+            }
+            
+            
+            .slider_div {
+                width: 100%;
+                text-align: center;
+                margin-top: 8px;
+            }
+            
+            #slider_text {
+                
+                color: rgba(255,255,255,1);
+                font-family: Arial;
+                font-size: 11px;
+                margin-bottom: -3px;
+           
+            }
+               
+            #busses_dropdown {
+                
+                height: 17px;
+                width: 102px;
+                
+            }
+            
+            #bus_button {
+                
+                background: rgba(250,250,250,.3);
+                border: none;
+                border-radius: 4px;
+                color: rgba(255,255,255,1);
+                height:18px;
+                font-size: 11px;
+                width: 102px;
+            }
+            
+            #bus_button:hover {
+                
+                background: rgba(250,250,250,.6);
+                
+            }    
+            
+            #leaflet-slider {
+                
+                background: rgba(250,250,250,.3);
+                border-color: rgba(250,250,250,.0);
+                right:20px;
+                top: 110px;
+                width: 148px !important;
+                
+                
+            }
+            
+            #slider-timestamp {
+                
+                background: rgba(250,250,250,.0 ) !important;
+                border-color: rgba(250,250,250,.0) !important;
+                color: rgba(255,250,250,1) !important;
+                height: 18px !important;
+                width: 148px !important;
+                
+                
+            }
+            
+            ui-state-default:first-of-type, .ui-widget-content .ui-state-default:first-of-type, .ui-widget-header .ui-state-default:first-of-type {
+                
+                border-color: rgba(250,250,250,.0);
+                background: rgba(240,240,240,1);
+                
+            }
+            
+            .route_view {
+                top:230px;
+                height: 30px;
+                width: 22.5px;
+                background-color: rgba(57,57,57,.75);
+                border-radius: 4px;
+                box-shadow: 0 0 15px  rgba(0,0,0,.5);
+                color: rgba(255,255,255,1);
+                padding: 6px 9px;   
+                vertical-align: middle;
+            }
+            
+            .route_view img {
+                position:relative;
+                left: -2px;
+                width: 130%;
+                
+            }
+                
+            .route_view p {
+                
+                color: rgba(255,255,255,0);
+                left: -6px;
+                position: relative;
+                top:-5px;
+                width:150px;
+                
+            }
+            
+            .route_view:hover p {
+                
+                color: rgba(255,255,255,1);
+                
+            }
+                   
+    </style>
+        
+    </head>
+    
+    <body>
+                
+        <div id = "header">
+            
+            <div class="header_el" style="margin-bottom:-15px;">
+                <p style="font-size: 20px; font-family:Century Schoolbook; font-style: oblique; letter-spacing:1.5px;"><b>DC Latebus</b></p>
+            </div>
+
+            <div class="header_el">
+                <p class="dropdown_el"><b>Select variable to map</b></p>
+                <select class="dropdown_lst" id="map_variable">
+                    <option></option>
+                    <option value="1">Lateness</option>
+                    <option value="2">Bus Location</option>
+                </select>                
+            </div>
+            
+            <div class="header_el">  
+                <p class="dropdown_el"><b>Select route to map</b></p>
+                <select class="dropdown_lst" name="routes_dropdown" id="map_route">
+                    <option></option>
+                </select>  
+            </div>
+            
+            <div class="header_el" style="margin:7px 0;">
+                <button id="button">Map</button>
+                <button id="button" onClick="window.location.reload();" style="margin-left:10px;">Reset</button>
+            </div>
+
+        </div>
+        
+        <div id='map'></div>
+ 
+    </body>
+        
+    <script type="text/javascript">
+        
+        var map = L.map('map', {
+            
+            zoomControl: false
+                
+        }).setView([38.89,-77.0369],11);
+            
+        var baselayer = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWF4Z3Jvc3NtYW4iLCJhIjoiY2loZTQ5bHpxMGlyaXRwbHpsN3FscjA3bSJ9.ry1OJsQ5SCbhrH7fYd7adg', {
+            maxZoom: 18,                
+            minZoom: 11,                
+            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                    'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+            id: 'mapbox.streets'
+        })
+            
+        baselayer.addTo(map);        
+        
+        L.control.scale().addTo(map);
+
+            
+        
+        // call github api to get contents of viz/day_routes sub folder, holding route geojsons
+        // create day_routes list of 'download_urls', the rawgit urls for routes that can be loaded into leaflet
+            
+        
+        
+        $(document).ready(function() {
+                
+            $.getJSON("https://api.github.com/repos/maxgrossman/dclatebus/contents/viz/day_routes", function (data) {
+                
+                 $.each(data, function(i, item) {
+                        
+                    $("#map_route").append( $("<option></option>")
+                                   .val(data[i].download_url)
+                                   .html(data[i].download_url.split("/day_routes/")[1].split(".")[0]) )});
+                
+            });
+            
+            // to only allow map click to trigger event one time,
+            
+            var allowedClicks = 0;
+            
+            $("#button").on("click", function() {
+                
+               allowedClicks++
+                
+               if( allowedClicks > 1) {
+                   
+               } else {
+                
+               if($("#map_variable").val() == 1) {
+                    
+                    $.getJSON($( "#map_route" ).val(),function(data) {
+                
+                        // on load, create geojson with style and interactivity functionality 
+                        var routeGeoJson = L.geoJson(data, {
+
+                            style: function(feature) {
+
+                                return {                                                           
+                                    "color": feature.properties.dev_col,                            
+                                    "lineCap": "butt",
+                                    "opacity": 0.7,
+                                    "weight": 3                        
+                                };
+                            },
+
+                            onEachFeature: function(feature, layer) {
+
+                                layer.on('mouseover', function() {
+
+                                    this.setStyle({
+
+                                        opacity:1,
+                                        "weight": 4
+
+                                    });
+
+                                if (L.Browser.ie && !L.Broswer.opera && !L.Browser.edge) {
+
+                                    this.bringToFront();
+
+                                }
+
+                                    lateness_info.update(this.feature.properties);
+
+                                });
+
+                                layer.on('click', function() {
+
+                                    if(map.resetRouteView) {
+
+                                    } else {
+
+                                        map.fitBounds(this.getBounds());
+                                        map.addControl(new resetRouteView());
+
+                                    }
+
+                                });
+
+                                layer.on('mouseout', function() {
+
+                                    routeGeoJson.resetStyle(this);
+
+                                    lateness_info.update();
+
+                                });
+
+                            }}).addTo(map);
+
+                            map.fitBounds(routeGeoJson.getBounds())
+
+                            //control to reset bounds when zoomed to route
+
+                            var resetRouteView = L.Control.extend({
+
+                                options: {
+
+                                    position: 'topleft'
+                                },
+
+                                onAdd: function(map) {
+
+                                    var container = L.DomUtil.create('div', 'route_view');
+
+                                    map.resetRouteView = this;
+
+                                    $(container).on('click', function () {
+
+                                        map.fitBounds(routeGeoJson.getBounds());
+
+                                        map.removeControl(this);
+
+                                        delete map.resetRouteView;
+
+                                    });
+
+                                    container.innerHTML = "<img src='dc.png'/><p>Click to reset scale</p>"
+
+                                    return container;
+
+                                }
+
+                            });
+
+                            // control (info about lateness) showing median, min, max segment lateness
+                            var lateness_info = L.control({position: 'topright'});
+
+                            lateness_info.onAdd = function(map) {
+
+                                this._div = L.DomUtil.create('div', 'lateness_info');
+                                this.update();
+                                return this._div;
+                            };
+
+                            lateness_info.update = function(props) {
+
+                                this._div.innerHTML = '<h4><b>Bus Lateness</b></h4>' + (props ? '<p><b>Segment : </b> ' + props.seg_id + '</p>' + '<p><b>Median Lateness :</b> ' + props.deviations_median.toString() + ' minutes</p>' + '<p><b>Max Lateness : </b>' + props.deviations_max.toString() + ' minutes</p>' + '<p><b>Min Lateness : </b>' + props.deviations_min.toString() + ' minutes</p>' : '<p>Hover over route segment</p>');
+                                    
+                            }
+                                
+                               
+
+
+                    
+
+                            lateness_info.addTo(map);
+
+
+                        });
+                    
+                } 
+                
+               if($("#map_variable").val() == 2) {
+                
+                   $.getJSON($( "#map_route" ).val(), 
+                             
+                        function(data) {
+                       
+                            routeGEOJSON = data;
+   
+                            // create empty object that will hold midpoint of each segment as well as the bus# & its correspond time of day
+                            geojson_buspnts = {};
+                   
+                            // iterate through geojson, adding to geojson_buspnts only geom & busses where busses were selected
+                            $.each(routeGEOJSON.features, function(key,val) {
+
+                                $.each(val, function(i,j) { 
+
+                                    if(val.properties.deviations_min === "null") {} 
+
+                                    else { geojson_buspnts[val.properties.seg_id] = [val.geometry.coordinates,val.properties] }
+
+                                })
+                            
+                            })	
+                            
+                            // reset the geom to segments' midpoint coordinates and remove deviation and seg_id properties from nested objects
+                            $.each(geojson_buspnts, function(i,item){
+
+                                // where length of points is even, generate a lat/lng 1/2 way between middle two lat/lng  
+                                // where length of points is odd, select the middle lat/lnt
+                                if(geojson_buspnts[i][0].length % 2 == 0) { 
+
+                                    geojson_buspnts[i][0] = [(item[0][item[0].length/2][0] + item[0][item[0].length/2 + 1][0])/2,		
+                                                             (item[0][item[0].length/2][1] + item[0][item[0].length/2 + 1][1])/2]
+
+                                } 
+                                
+                                else {
+
+                                    geojson_buspnts[i][0] = [item[0][(item[0].length + 1)/2][0],		
+                                                            item[0][(item[0].length + 1)/2][1]]
+                                }
+                     
+                                //remove those key,val pairs where key has "dev", and do the same where key has "seg"
+                                
+                                for (key in item[1]) {if(key.match("dev")) {delete item[1][key]} }
+                                                            });
+                
+                            bus_times = [];
+                   
+                            $.each(geojson_buspnts, function(i,item) {
+                    
+                                for(key in item[1]) {
+
+                                    if(key.match(key.split("_")[0])) {bus_times.push(key.split("_")[0])}
+
+                                }                
+
+                            });
+                   
+                            bus_times = $.unique(bus_times);
+
+                            bus_markers = [];
+                   
+                            var myIcon = L.icon({
+                                iconUrl: 'black-dot-hi.png',
+                                iconSize: [15, 15],
+                                popupAnchor: [-3, -76]
+
+                            });
+
+                            $.each(geojson_buspnts, function(i,item) {
+
+                                    for(var i = 0; i < bus_times.length; i++) {
+
+                                        for(key in item[1]) {
+
+                                            if(key.match(bus_times[i])) {
+
+                                                if(key.match("time")) {bustime=item[1][key]} 
+
+                                                if(key.match("bus")) {busid=item[1][key]}
+                                                
+                                                //if(key.match("seg")) {bus_seg=item[1][key]}
+                                            }
+                                        }          
+                                    }
+
+                                bus_markers.push(L.marker([item[0][1],item[0][0]], {icon: myIcon , time: bustime, title:busid}))        
+
+                            });
+               
+                            var bus_ids = [];    
+                       
+                            $.each(bus_markers, function(i, item) {
+                                
+                                bus_ids.push(item.options.title)
+                            
+                            });
+                       
+                            bus_ids = $.unique(bus_ids)
+           
+                            $(' <div class="slider_selector"></div> ').appendTo(' body ') 
+                       
+                            $('<div id="slidecont"><div class="slider_div" id="slider_text"><p><b>Select a bus to map</b><p></div><div class="slider_div"><select class="dropdown_lst" id="busses_dropdown"></select></div><div class="slider_div"><button id="bus_button">Map busses</button></div></div>').appendTo(' .slider_selector ')  
+                            
+                            $.each(bus_ids, function(i, item) {
+                                
+                                $("#busses_dropdown").append( $("<option></option>")
+                                   .val(item)
+                                   .html(item));
+                                
+                            });
+                       
+                            busses = 0
+                                              
+                            $(' #bus_button ').on("click", function() {
+                                
+                                if(busses == 0 ) {
+                                    
+                                    var markers_to_map = [];
+
+                                    $.each(bus_markers, function(i, item) {
+
+                                        if(item.options.title == $("#busses_dropdown").val() ) {
+
+                                            markers_to_map.push(item)
+
+                                        }
+                                    });
+
+                                    markers_to_map = markers_to_map.sort(
+
+                                        function(a,b){ 
+
+                                            return new Date(a.options.time).getTime() - new Date(b.options.time).getTime()
+
+                                        }
+
+                                    );
+
+
+                                    var sliderControl = L.control.sliderControl({
+
+                                            follow: 1,
+                                            layer: L.layerGroup(markers_to_map),
+                                            position: "topright"
+
+                                    });
+
+                                    sliderControl.addTo(map);
+
+                                    sliderControl.startSlider();
+
+                                    L.geoJson(routeGEOJSON, {
+
+                                        style: {
+
+                                            "color": "rgba(250,250,250,.8)",                            
+                                            "lineCap": "butt",
+                                            "weight": 3                        
+                                        }
+
+
+                                    }).addTo(map);
+                                    
+                                    map.fitBounds(L.geoJson(routeGEOJSON).getBounds())
+                                }
+                                
+                                busses = busses + 1
+                                    
+                            });
+                                
+                                
+                                
+                                
+                                
+                            });
+     
+                    }}})});
+
+        
+        
+        
+                            
+                    
+                    
+                    
+                    
+                   
+        
+        
+                
+        </script>
+            
+
+</html>
+
+
