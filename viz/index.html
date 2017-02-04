@@ -28,6 +28,8 @@
                 
             }
             
+          
+            
             #header {
                 background-color: rgba(57,57,57,.65);
                 border-radius: 4px;
@@ -66,8 +68,12 @@
                 background: rgba(250,250,250,.6);
 
             }
-        
             
+            #header_title {
+                
+               margin-bottom:-15px;
+            }
+                   
             .dropdown_lst {
                 
                 background: rgba(250,250,250,.3);
@@ -80,6 +86,8 @@
                 
                 background: rgba(250,250,250,.6);
             }
+            
+            
             
             #map {
                 
@@ -119,73 +127,29 @@
                 
             }
             
-            .slider_selector {
-                background-color: rgba(57,57,57,.65);
-                border-radius: 4px;
-                box-shadow: 0 0 15px  rgba(0,0,0,.5);
-                height:95px;
-                right: 30px; 
-                top: 15px;
-                position:absolute;
-                width: 150px;
-                z-index: 0;
-            
-            }
-            
             #slidecont {
                 width:100%;
                 position: relative;
+                margin-bottom: -10px
             }
             
-            
-            .slider_div {
-                width: 100%;
-                text-align: center;
-                margin-top: 8px;
-            }
-            
-            #slider_text {
-                
-                color: rgba(255,255,255,1);
-                font-family: Arial;
-                font-size: 11px;
-                margin-bottom: -3px;
-           
-            }
-               
-            #busses_dropdown {
-                
-                height: 17px;
-                width: 102px;
-                
-            }
-            
-            #bus_button {
-                
-                background: rgba(250,250,250,.3);
-                border: none;
-                border-radius: 4px;
-                color: rgba(255,255,255,1);
-                height:18px;
-                font-size: 11px;
-                width: 102px;
-            }
-            
-            #bus_button:hover {
-                
-                background: rgba(250,250,250,.6);
-                
-            }    
             
             #leaflet-slider {
                 
                 background: rgba(250,250,250,.3);
                 border-color: rgba(250,250,250,.0);
-                right:20px;
-                top: 110px;
-                width: 148px !important;
+                left:5px;
+                top: 280px;
+                width: 143px !important;
                 
                 
+            }
+            
+            .leaflet-marker-icon {
+            
+                background-color: rgba(255,255,255,0.5);
+                border-radius: 50%;
+                box-shadow: 0px 0px 4px rgba(255,255,255,1);
             }
             
             #slider-timestamp {
@@ -249,11 +213,11 @@
                 
         <div id = "header">
             
-            <div class="header_el" style="margin-bottom:-15px;">
+            <div class="header_el" id="header_title">
                 <p style="font-size: 20px; font-family:Century Schoolbook; font-style: oblique; letter-spacing:1.5px;"><b>DC Latebus</b></p>
             </div>
 
-            <div class="header_el">
+            <div class="header_el" id="var_select">
                 <p class="dropdown_el"><b>Select variable to map</b></p>
                 <select class="dropdown_lst" id="map_variable">
                     <option></option>
@@ -262,21 +226,26 @@
                 </select>                
             </div>
             
-            <div class="header_el">  
+            <div class="header_el" id="rt_select">  
                 <p class="dropdown_el"><b>Select route to map</b></p>
                 <select class="dropdown_lst" name="routes_dropdown" id="map_route">
                     <option></option>
                 </select>  
             </div>
             
-            <div class="header_el" style="margin:7px 0;">
+            <div class="header_el" id="slidecont">
+                <p><b>Select a bus to map</b><p><select class="dropdown_lst" id="busses_dropdown"></select>
+            </div>
+            
+            <div class="header_el" id="buttons_div">
                 <button id="button">Map</button>
                 <button id="button" onClick="window.location.reload();" style="margin-left:10px;">Reset</button>
             </div>
-
+            
         </div>
         
         <div id='map'></div>
+        
  
     </body>
         
@@ -319,6 +288,160 @@
                                    .html(data[i].download_url.split("/day_routes/")[1].split(".")[0]) )});
                 
             });
+            
+            
+            
+            // function to show selection drop downs and extend #header height upon successive dropdown selections
+            $(function() {
+                
+                // set each div in #header as hidden
+                $('#rt_select').hide();
+                $('#buttons_div').hide();
+                $('#slidecont').hide();
+                
+                // set header height to height of title and first dropdown
+                $('#header').height($('#header_title').height() + $('#var_select').height())
+                
+                // counter to control height extensions, only allowing allowing height to be increased one time
+                select_counter = 0
+                
+                // function that increases height and shows #rt_select div when 'variable to map' is selected
+                $("#var_select").change(function() {
+                    
+                    // make select_counter 1 so to control if statement to occur only once
+                    select_counter = select_counter + 1
+                    
+                    if($('#map_variable option').is(':selected') && select_counter == 1) {
+                        
+                        $('#header').height($('#header').height() + $('#rt_select').height())
+                        $('#rt_select').show();
+                        
+                    };
+                    
+                    
+                });
+                
+                $("#rt_select").change(function() {
+                
+                    if ($('#map_route option').is(':selected') && $('#map_variable').val() != 2) {
+                        
+                        $('#header').height(210)
+                        $('#buttons_div').show();
+                        $('#buttons_div').css({marginTop : '5px'})
+                        
+                    }
+                    
+                    else if ($('#map_route option').is(':selected') && $('#map_variable').val() == 2) {
+                        
+                        $('#header').height(265)
+                        $('#buttons_div').show();
+                        $('#slidecont').show();
+                        $.getJSON($( "#map_route" ).val(), function(data) {
+                       
+                            routeGEOJSON = data;
+   
+                            // create empty object that will hold midpoint of each segment as well as the bus# & its correspond time of day
+                            geojson_buspnts = {};
+                   
+                            // iterate through geojson, adding to geojson_buspnts only geom & busses where busses were selected
+                            $.each(routeGEOJSON.features, function(key,val) {
+
+                                $.each(val, function(i,j) { 
+
+                                    if(val.properties.deviations_min === "null") {} 
+
+                                    else { geojson_buspnts[val.properties.seg_id] = [val.geometry.coordinates,val.properties] }
+
+                                })
+                            
+                            })	
+                            
+                            // reset the geom to segments' midpoint coordinates and remove deviation and seg_id properties from nested objects
+                            $.each(geojson_buspnts, function(i,item){
+
+                                // where length of points is even, generate a lat/lng 1/2 way between middle two lat/lng  
+                                // where length of points is odd, select the middle lat/lnt
+                                if(geojson_buspnts[i][0].length % 2 == 0) { 
+
+                                    geojson_buspnts[i][0] = [(item[0][item[0].length/2][0] + item[0][item[0].length/2 + 1][0])/2,		
+                                                             (item[0][item[0].length/2][1] + item[0][item[0].length/2 + 1][1])/2]
+
+                                } 
+                                
+                                else {
+
+                                    geojson_buspnts[i][0] = [item[0][(item[0].length + 1)/2][0],		
+                                                            item[0][(item[0].length + 1)/2][1]]
+                                }
+                     
+                                //remove those key,val pairs where key has "dev", and do the same where key has "seg"
+                                
+                                for (key in item[1]) {if(key.match("dev")) {delete item[1][key]} }
+                                                            });
+                
+                            bus_times = [];
+                   
+                            $.each(geojson_buspnts, function(i,item) {
+                    
+                                for(key in item[1]) {
+
+                                    if(key.match(key.split("_")[0])) {bus_times.push(key.split("_")[0])}
+
+                                }                
+
+                            });
+                   
+                            bus_times = $.unique(bus_times);
+
+                            bus_markers = [];
+                   
+                            var myIcon = L.icon({
+                                iconUrl: 'black-dot-hi.png',
+                                iconSize: [12, 12],
+                                popupAnchor: [-3, -76]
+
+                            });
+
+                            $.each(geojson_buspnts, function(i,item) {
+
+                                    for(var i = 0; i < bus_times.length; i++) {
+
+                                        for(key in item[1]) {
+
+                                            if(key.match(bus_times[i])) {
+
+                                                if(key.match("time")) {bustime=item[1][key]} 
+
+                                                if(key.match("bus")) {busid=item[1][key]}
+                                                
+                                                //if(key.match("seg")) {bus_seg=item[1][key]}
+                                            }
+                                        }          
+                                    }
+
+                                bus_markers.push(L.marker([item[0][1],item[0][0]], {icon: myIcon , opacity: 0.9, time: bustime, title:busid}))        
+
+                            });
+               
+                            var bus_ids = [];    
+                       
+                            $.each(bus_markers, function(i, item) {
+                                
+                                bus_ids.push(item.options.title)
+                            
+                            });
+                       
+                            bus_ids = $.unique(bus_ids)
+            
+                            $.each(bus_ids, function(i, item) {
+                                
+                                $("#busses_dropdown").append( $("<option></option>")
+                                   .val(item)
+                                   .html(item));
+                                
+                            });
+                       
+                        })}})});
             
             // to only allow map click to trigger event one time,
             
@@ -457,184 +580,88 @@
                 } 
                 
                if($("#map_variable").val() == 2) {
-                
-                   $.getJSON($( "#map_route" ).val(), 
-                             
-                        function(data) {
-                       
-                            routeGEOJSON = data;
-   
-                            // create empty object that will hold midpoint of each segment as well as the bus# & its correspond time of day
-                            geojson_buspnts = {};
                    
-                            // iterate through geojson, adding to geojson_buspnts only geom & busses where busses were selected
-                            $.each(routeGEOJSON.features, function(key,val) {
-
-                                $.each(val, function(i,j) { 
-
-                                    if(val.properties.deviations_min === "null") {} 
-
-                                    else { geojson_buspnts[val.properties.seg_id] = [val.geometry.coordinates,val.properties] }
-
-                                })
-                            
-                            })	
-                            
-                            // reset the geom to segments' midpoint coordinates and remove deviation and seg_id properties from nested objects
-                            $.each(geojson_buspnts, function(i,item){
-
-                                // where length of points is even, generate a lat/lng 1/2 way between middle two lat/lng  
-                                // where length of points is odd, select the middle lat/lnt
-                                if(geojson_buspnts[i][0].length % 2 == 0) { 
-
-                                    geojson_buspnts[i][0] = [(item[0][item[0].length/2][0] + item[0][item[0].length/2 + 1][0])/2,		
-                                                             (item[0][item[0].length/2][1] + item[0][item[0].length/2 + 1][1])/2]
-
-                                } 
-                                
-                                else {
-
-                                    geojson_buspnts[i][0] = [item[0][(item[0].length + 1)/2][0],		
-                                                            item[0][(item[0].length + 1)/2][1]]
-                                }
-                     
-                                //remove those key,val pairs where key has "dev", and do the same where key has "seg"
-                                
-                                for (key in item[1]) {if(key.match("dev")) {delete item[1][key]} }
-                                                            });
-                
-                            bus_times = [];
+                   busses = 0;
                    
-                            $.each(geojson_buspnts, function(i,item) {
-                    
-                                for(key in item[1]) {
-
-                                    if(key.match(key.split("_")[0])) {bus_times.push(key.split("_")[0])}
-
-                                }                
-
-                            });
-                   
-                            bus_times = $.unique(bus_times);
-
-                            bus_markers = [];
-                   
-                            var myIcon = L.icon({
-                                iconUrl: 'black-dot-hi.png',
-                                iconSize: [15, 15],
-                                popupAnchor: [-3, -76]
-
-                            });
-
-                            $.each(geojson_buspnts, function(i,item) {
-
-                                    for(var i = 0; i < bus_times.length; i++) {
-
-                                        for(key in item[1]) {
-
-                                            if(key.match(bus_times[i])) {
-
-                                                if(key.match("time")) {bustime=item[1][key]} 
-
-                                                if(key.match("bus")) {busid=item[1][key]}
-                                                
-                                                //if(key.match("seg")) {bus_seg=item[1][key]}
-                                            }
-                                        }          
-                                    }
-
-                                bus_markers.push(L.marker([item[0][1],item[0][0]], {icon: myIcon , time: bustime, title:busid}))        
-
-                            });
-               
-                            var bus_ids = [];    
-                       
-                            $.each(bus_markers, function(i, item) {
-                                
-                                bus_ids.push(item.options.title)
-                            
-                            });
-                       
-                            bus_ids = $.unique(bus_ids)
-           
-                            $(' <div class="slider_selector"></div> ').appendTo(' body ') 
-                       
-                            $('<div id="slidecont"><div class="slider_div" id="slider_text"><p><b>Select a bus to map</b><p></div><div class="slider_div"><select class="dropdown_lst" id="busses_dropdown"></select></div><div class="slider_div"><button id="bus_button">Map busses</button></div></div>').appendTo(' .slider_selector ')  
-                            
-                            $.each(bus_ids, function(i, item) {
-                                
-                                $("#busses_dropdown").append( $("<option></option>")
-                                   .val(item)
-                                   .html(item));
-                                
-                            });
-                       
-                            busses = 0
-                                              
-                            $(' #bus_button ').on("click", function() {
-                                
-                                if(busses == 0 ) {
+                   if(busses == 0 ) {
                                     
-                                    var markers_to_map = [];
+                        var markers_to_map = [];
 
-                                    $.each(bus_markers, function(i, item) {
+                        $.each(bus_markers, function(i, item) {
 
-                                        if(item.options.title == $("#busses_dropdown").val() ) {
+                            if(item.options.title == $("#busses_dropdown").val() ) {
 
-                                            markers_to_map.push(item)
+                                markers_to_map.push(item)
 
-                                        }
-                                    });
+                            }
+                        });
 
-                                    markers_to_map = markers_to_map.sort(
+                        markers_to_map = markers_to_map.sort(
 
-                                        function(a,b){ 
+                            function(a,b){ 
 
-                                            return new Date(a.options.time).getTime() - new Date(b.options.time).getTime()
+                                return new Date(a.options.time).getTime() - new Date(b.options.time).getTime()
 
-                                        }
+                            }
 
-                                    );
-
-
-                                    var sliderControl = L.control.sliderControl({
-
-                                            follow: 1,
-                                            layer: L.layerGroup(markers_to_map),
-                                            position: "topright"
-
-                                    });
-
-                                    sliderControl.addTo(map);
-
-                                    sliderControl.startSlider();
-
-                                    L.geoJson(routeGEOJSON, {
-
-                                        style: {
-
-                                            "color": "rgba(250,250,250,.8)",                            
-                                            "lineCap": "butt",
-                                            "weight": 3                        
-                                        }
+                        );
 
 
-                                    }).addTo(map);
+                        var sliderControl = L.control.sliderControl({
+
+                            follow: 1,
+                            layer: L.layerGroup(markers_to_map),
+                            position: "topleft"
+
+                        });
+
+                        sliderControl.addTo(map);
+
+                        sliderControl.startSlider();
+
+                        L.geoJson(routeGEOJSON, {
+
+                            style: {
+
+                                "color": "rgba(200,200,200,1)",                            
+                                "lineCap": "round",
+                                "weight": 2                        
+                            }
+
+
+                        }).addTo(map);
                                     
-                                    map.fitBounds(L.geoJson(routeGEOJSON).getBounds())
-                                }
-                                
-                                busses = busses + 1
+                        map.fitBounds(L.geoJson(routeGEOJSON).getBounds())
+                        
+                   }
+                                 
+                   busses = busses + 1
+                   
+                   //var busses_info = L.control({position: 'topright'});
+
+                   //busses_info.onAdd = function(map) {
+
+                              //  this._div = L.DomUtil.create('div', 'busses_info');
+                             //   this.update();
+                            //    return this._div;
+                        //   };
+
+                //  busses_info.update = function(props) {
+
+                 //       this._div.innerHTML = '<h4><b>Bus Lateness</b></h4>' + (props ? '<p><b>Segment : //');
                                     
-                            });
-                                
-                                
-                                
-                                
-                                
-                            });
-     
-                    }}})});
+                 // }
+              
+               //   busses_info.addTo(map);
+                                                                        
+                                                                                
+                                                                                        
+                                    
+                };
+              };
+            });});
+
+        
 
         
         
