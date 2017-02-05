@@ -19,37 +19,9 @@ createdb -O maxgrossman -T wmata_routes_orig wmata_routes
 
 # make the daily geojsons 
 
-Rscript R/Day_GeoJSON_maker.R
-
-# get time stamp and use it for unique filename
-
-current_time=$(date "+%Y.%m.%d")
-
-# create variable names for the two directories 
-
-dir0=dir0routes
-
-dir1=dir1routes
-
-# combine directories and current time for filename
-
-dir0filename=$dir0.$current_time.geojson
-
-dir1filename=$dir1.$current_time.geojson
-
-# merge both directions
-
-geojson-merge data/dir0routes/*.geojson > data/dir0routes/daily/$dir0filename
-
-geojson-merge data/dir1routes/*.geojson > data/dir1routes/daily/$dir1filename
-
-# remove the routes
-
-rm -f data/dir0routes/*.geojson
-
-rm -f data/dir1routes/*.geojson
-
-dropdb wmata_routes_temp
-
-
-
+current_date=$(date "+%Y-%m-%d")   
+mkdir data/dir0routes/dailygeojson/$current_date         
+mkdir data/dir0routes/dailycsv/$current_date         
+mkdir data/dir1routes/dailygeojson/$current_date  
+mkdir data/dir1routes/dailycsv/$current_date  
+Rscript R/Day_GeoJSON_maker.R    

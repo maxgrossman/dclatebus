@@ -1,20 +1,19 @@
-
 ##########################################################################################
 # Programmer: Maximus
 # Title: Day_GeoJSON_maker.R
 # Purpose: take database each day and write to GeoJSON
 # Method: 
-  # a: connect to temp database
-  # b: for each table in each schema, create json for segments. save those to a JSON for said route
-  # c: add those route JSONS to direction JSON
-  # d: combine both directoins to single JSON and write to /data folder. 
+# a: connect to temp database
+# b: for each table in each schema, create json for segments. save those to a JSON for said route
+# c: add those route JSONS to direction JSON
+# d: combine both directoins to single JSON and write to /data folder. 
 
 ##########################################################################################
 
 ### Conditionally install/load needed packages ###
 
 # list of packages used in script
-packages <- c( "jsonlite", "RPostgreSQL", "rgdal", "rgeos" )
+packages <- c( "jsonlite", "RPostgreSQL", "rgdal", "rgeos", "stringi", "RColorBrewer")
 
 # coerce response from installed.packages() to be clean data.frame of packages installed
 packages_installed <- as.data.frame( installed.packages()[,c(1,3:4)] )
@@ -71,15 +70,15 @@ connection <- dbConnect( drv = drv,
 ##########################################################################################
 
 # function makes string to write out to geojson. particularly it does the following with a geom_lst, holding geometry for each segment and properties_lst, holding property data for each seg:
-  # create list of features held within the geojson
-  # for loop over properties_lst
-    # generate the correct geometry object holding the geometry array held in geom_lst
-    # generate the correct properties object from the objects held in the properties_lst
-    # combine these together into a the feature object
-    # add the feature variable the features_lst
-  # unlist the features_lst
-  # save a string of all elements in features_lst to a string, collapsing (separating within the string) each element with a comma
-  # return a string that represents a feature collection geojson.
+# create list of features held within the geojson
+# for loop over properties_lst
+# generate the correct geometry object holding the geometry array held in geom_lst
+# generate the correct properties object from the objects held in the properties_lst
+# combine these together into a the feature object
+# add the feature variable the features_lst
+# unlist the features_lst
+# save a string of all elements in features_lst to a string, collapsing (separating within the string) each element with a comma
+# return a string that represents a feature collection geojson.
 
 route_geojson_maker <- function(geom_lst,properties_lst) {
   
@@ -90,9 +89,9 @@ route_geojson_maker <- function(geom_lst,properties_lst) {
     geometry <- paste('"geometry": { "type": "LineString",', '"coordinates":', geom_lst[i],'},')
     
     properties <- paste('"properties": {', properties_lst[i] ,'}')
-
+    
     feature <-  paste('{ "type": "Feature",', geometry, properties, "}")
-      
+    
     features_lst[[ length(features_lst) + 1L ]] <- feature
     
   }
@@ -131,19 +130,31 @@ for( i in 1:length(db_dir_routes)) {
   for ( j in 1:length(db_dir_routes[[i]])) {
     
     route_id <- db_dir_routes[[i]][j]
-   
+    
     route_tab <- paste( shQuote( dir_schema , type = 'cmd'), 
                         shQuote( route_id, type = 'cmd'), sep = ".")
     
     route_main_query <- paste("SELECT * FROM ", route_tab, ";", sep="")
     
-    route_seg_geom_query <- paste("SELECT ST_AsText(seg_geom) FROM ", route_tab, ";", sep="")
+    route_seg_geom_query <- paste("SELECT ST_AsText(seg_geom), ST_AsText(stop_geom) FROM ", route_tab, ";", sep="")
     
-    route_df <- fetch(dbSendQuery(connection, route_main_query))
+    if(length(names(fetch(dbSendQuery(connection, route_main_query)))) > 8) {
+      
+      route_df <- cbind(fetch(dbSendQuery(connection, route_main_query))[,1:6],
+                        fetch(dbSendQuery(connection, route_seg_geom_query)), 
+                        fetch(dbSendQuery(connection, route_main_query))[,9:length(names(fetch(dbSendQuery(connection, route_main_query))))])
+      
+    } else {
+      
+      route_df <-  fetch(dbSendQuery(connection, route_main_query))
+      
+    }
     
     if ( ( TRUE %in% grepl("dev", names(route_df))) == TRUE ) {
-
-      route_segs <- cbind(route_df[,2],fetch(dbSendQuery(connection, route_seg_geom_query)))
+      
+      route_segs <- cbind(route_df[,2],fetch(dbSendQuery(connection, route_seg_geom_query))[,1])
+      
+      route_stops <- cbind(route_df[,5],route_df[,6])
       
       route_dev <- cbind(route_df[,2],route_df[grepl("dev", names(route_df))])
       
@@ -183,19 +194,19 @@ for( i in 1:length(db_dir_routes)) {
         
         for( m in 1:length(names(route_df[grepl("dev", names(route_df))]))) {
           
-          if ( route_dev[k,m+1] %in% NA ) {
+          if ( route_dev[k,m+1] %in% NA || is.null(route_dev[k,m+1]) ) {
             
             dev_val <- shQuote("null", type <- "cmd")
             
           } else { dev_val <- route_dev[k,m+1] }
           
-          if ( route_bus[k,m+1] %in% NA ) {
+          if ( route_bus[k,m+1] %in% NA || is.null(route_bus[k,m+1]) ) {
             
             bus_val <- shQuote("null", type <- "cmd")
             
           } else { bus_val <- route_bus[k,m+1] }
           
-          if ( route_time[k,m+1] %in% NA ) {
+          if ( route_time[k,m+1] %in% NA || is.null(route_time[k,m+1]) ) {
             
             time_val <- shQuote("null", type <- "cmd")
             
@@ -231,6 +242,8 @@ for( i in 1:length(db_dir_routes)) {
       
       geom_lst <- list()
       
+      deviations_stats_list <- list()
+      
       for ( k in 1:length(as.character(seq_along(deviations_json_elements)[bool_lst])) ) {
         
         seg_geom_coords <- as(spTransform(readWKT(route_segs[k,2],p4s=msp),CRS(wgs84)),"SpatialPointsDataFrame")@coords
@@ -247,93 +260,184 @@ for( i in 1:length(db_dir_routes)) {
         
         seg_feature_geom <- paste("[", paste(seg_geom_coords_lst, collapse = ", ") ,"]")
         
-        seg_id_feature_value <- paste(paste(shQuote("seg_id", type="cmd"),shQuote(route_df[k,2], type="cmd"), sep = " : "),",")
+        seg_id_feature_value <- paste(shQuote("seg_id", type="cmd"),shQuote(route_df[k,2], type="cmd"), sep = " : ")
+        
+        seg_stops_feature_value <- paste(shQuote("seg_stops", type="cmd"),shQuote(paste(stri_trans_totitle(lapply(route_stops[k,], function(x) sub("\\+", "&", gsub("_", " ", x)))), collapse = " - "), type="cmd"), sep = " : ")
         
         if( k < length(as.character(seq_along(deviations_json_elements)[bool_lst])) ) {
           
           deviations_features <- deviations_json_elements[as.numeric( as.character(seq_along(deviations_json_elements)[bool_lst])[k]):
-                                                         (as.numeric(as.character(seq_along(deviations_json_elements)[bool_lst])[k+1])-1)]
+                                                            (as.numeric(as.character(seq_along(deviations_json_elements)[bool_lst])[k+1])-1)]
           
           deviations_features <- deviations_features[grep("null",deviations_features, invert = TRUE)]
           
-          deviations_feature_values <-   paste (paste( deviations_features, collapse=" , "), ",", sep = "")
+          deviations_statistics <- summary(sapply(deviations_features, function(x) as.numeric(strsplit(x, ': ')[[1]][2])))
+          
+          deviations_statistics <- deviations_statistics[!grepl("Qu",names(deviations_statistics))]
+          
+          deviations_stat_features <- lapply(seq_along(deviations_statistics),function(x,y,i) 
+          {paste(shQuote(paste("deviations_",y[[i]],sep=""), type = "cmd")," : ", x[[i]], sep="")}
+          , x=deviations_statistics, y=tolower(gsub("\\.", "",names(deviations_statistics))))
           
           buses_features <- buses_json_elements[as.numeric( as.character(seq_along(buses_json_elements)[bool_lst])[k]):
-                                               (as.numeric(as.character(seq_along(buses_json_elements)[bool_lst])[k+1])-1)]
+                                                  (as.numeric(as.character(seq_along(buses_json_elements)[bool_lst])[k+1])-1)]
           
           buses_features <- buses_features[grep("null", buses_features, invert = TRUE)]
           
-          buses_feature_values <-paste( paste(buses_features, collapse=" , "), ",", sep = "")
-          
           times_features <- times_json_elements[as.numeric( as.character(seq_along(times_json_elements)[bool_lst])[k]):
-                                               (as.numeric(as.character(seq_along(times_json_elements)[bool_lst])[k+1])-1)]
+                                                  (as.numeric(as.character(seq_along(times_json_elements)[bool_lst])[k+1])-1)]
           
           times_features <- times_features[grep("null", times_features, invert = TRUE)]
           
-          times_feature_values <- paste(times_features, collapse=" , ")
-          
-        } else {
+        } else if ( k == length(as.character(seq_along(deviations_json_elements)[bool_lst])) ) {
           
           deviations_features <- deviations_json_elements[as.numeric( as.character(seq_along(deviations_json_elements)[bool_lst])[k]):
-                                                          length(seq_along(deviations_json_elements))]
+                                                            length(seq_along(deviations_json_elements))]
           
           deviations_features <- deviations_features[grep("null",deviations_features, invert = TRUE)]
           
-          deviations_feature_values <-   paste(paste(deviations_features,collapse=" , "), ",", sep = "")
+          deviations_statistics <- summary(sapply(deviations_features, function(x) as.numeric(strsplit(x, ': ')[[1]][2])))
+          
+          deviations_statistics <- deviations_statistics[!grepl("Qu",names(deviations_statistics))]
+          
+          deviations_stat_features <- lapply(seq_along(deviations_statistics),function(x,y,i) 
+          {paste(shQuote(paste("deviations_",y[[i]],sep=""), type = "cmd")," : ", x[[i]], sep="")}
+          , x=deviations_statistics, y=tolower(gsub("\\.", "",names(deviations_statistics))))
           
           buses_features <- buses_json_elements[as.numeric( as.character(seq_along(buses_json_elements)[bool_lst])[k]):
-                                                length(seq_along(buses_json_elements))]
+                                                  length(seq_along(buses_json_elements))]
           
           buses_features <- buses_features[grep("null", buses_features, invert = TRUE)]
           
-          buses_feature_values <-paste(paste(buses_features ,collapse=" , "), ",", sep = "")
-          
           times_features <- times_json_elements[as.numeric( as.character(seq_along(times_json_elements)[bool_lst])[k]):
-                                                length(seq_along(times_json_elements))]
+                                                  length(seq_along(times_json_elements))]
           
           times_features <- times_features[grep("null", times_features, invert = TRUE)]
-          
-          times_feature_values <- paste(times_features,collapse=" , ")
           
         }
         
         if( length(buses_features) == 0 ) {
           
-          properties_lst[[ length(properties_lst) + 1L ]] <- paste(seg_id_feature_value, 
-                                                                   paste(shQuote(paste(Sys.Date(), '_dev', sep =""), type = "cmd"), ' : ', shQuote('null', type="cmd"), " ,", sep=""),
-                                                                   paste(shQuote(paste(Sys.Date(), '_bus', sep =""), type = "cmd"), ' : ', shQuote('null', type="cmd"), " ,", sep=""),
-                                                                   paste(shQuote(paste(Sys.Date(), '_dev', sep =""), type = "cmd"), ' : ', shQuote('null', type="cmd"), sep=""))
+          properties_lst[[ length(properties_lst) + 1L ]] <- c(seg_id_feature_value,
+                                                               paste(shQuote("deviations_min", type = "cmd"), ' : ', shQuote('null', type="cmd"), sep=""),
+                                                               paste(shQuote("deviations_median", type = "cmd"), ' : ', shQuote('null', type="cmd"), sep=""),
+                                                               paste(shQuote("deviations_mean", type = "cmd"), ' : ', shQuote('null', type="cmd"), sep=""),
+                                                               paste(shQuote("deviations_max", type = "cmd"), ' : ', shQuote('null', type="cmd"), sep=""),
+                                                               seg_stops_feature_value)
+          
           
         } else {
           
-          properties_lst[[ length(properties_lst) + 1L ]] <- paste(seg_id_feature_value, deviations_feature_values, buses_feature_values, times_feature_values)
+          properties_lst[[ length(properties_lst) + 1L ]] <- c(seg_id_feature_value, deviations_stat_features, buses_features, times_features, seg_stops_feature_value)
+          
+          deviations_stats_list[[ length(deviations_stats_list) + 1L ]] <- deviations_statistics
           
         }
-        
-        
         
         geom_lst[[ length(geom_lst) + 1L ]] <- seg_feature_geom
         
       }
       
+      median_range <- range(unlist(lapply(seq_along(properties_lst), function(x, i) {
+        
+        if( strsplit((properties_lst[[i]][[3]][1]), ": ")[[1]][2] %in% shQuote("null", type = "cmd") ) {} else {
+          
+          as.numeric(strsplit((properties_lst[[i]][[3]][1]), ": ")[[1]][2]) 
+          
+        }},x=properties_lst)), na.rm =TRUE)
+      
+      
+      
+      median_breaks <- seq( from = median_range[1], to = median_range[2],
+                            by = ((median_range[2] - median_range[1]) / 5))
+      
+      if ( length(median_breaks) == 1 ) {
+        
+        median_color_values <- list()
+        
+        for ( k in 1:length(median_values) ) {
+          
+          if ( is.na(median_values[k]) ) {
+            
+            median_color_values[[ length(median_color_values) + 1L ]] <- shQuote("rgba(57,57,57,.0)", type = "cmd")
+            
+          } else {
+            
+            median_color_values[[ length(median_color_values) + 1L ]] <- shQuote("#FFFFBF", type = "cmd")
+            
+          }
+          
+        }
+        
+      } else {
+        
+        median_breaks <- lapply(seq_along(median_breaks), function(x,i) { if( i < length(median_breaks) ) {c(x[[i]], x[[i+1]] )} },x=median_breaks)
+        
+        median_breaks <- median_breaks[1:(length(median_breaks)-1)]
+        
+        median_values <- unlist(lapply(seq_along(properties_lst), function(x, i) {as.numeric(strsplit((properties_lst[[i]][[3]][1]), ": ")[[1]][2])}, x=properties_lst))
+        
+        median_color_values <- list()
+        
+        for ( k in 1:length(median_values) ) {
+          
+          if ( is.na(median_values[k]) ) {
+            
+            median_color_values[[ length(median_color_values) + 1L ]] <- shQuote("rgba(57,57,57,.0)", type = "cmd")
+            
+          } else {
+            
+            for ( j in 1:length(median_breaks)) {
+              
+              if ( median_values[k] >= median_breaks[[j]][1] &  median_values[k] <= median_breaks[[j]][2] ) {
+                
+                median_color_values[[ length(median_color_values) + 1L ]] <- shQuote(brewer.pal(length(median_breaks), "RdYlGn")[((j-(length(median_breaks)+1))*-1)], type = "cmd")
+                
+              } 
+              
+            }
+            
+          }
+          
+        }
+        
+      }
+      
+      
+      
+      median_color_values <- unlist(median_color_values)
+      
+      for( k in 1:length(properties_lst) ) {
+        
+        properties_lst[[k]][[ length(properties_lst[[k]]) + 1L ]] <- paste( shQuote("dev_col", type = "cmd"), median_color_values[k], sep = " : ")
+        
+      }
+      
+      properties_lst <- lapply( seq_along(properties_lst), function(x,i) { paste(x[[i]], collapse=", ") }, x = properties_lst)
+      
       route_geojson <- route_geojson_maker(geom_lst,properties_lst)
       
       if ( dir_schema == "dir0routes") {
         
-        file_path <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir0routes/",route_id,".geojson", sep = "")
+        file_path_geojson <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir0routes/dailygeojson/",Sys.Date(),"/",route_id,".geojson", sep = "")
+        file_path_csv <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir0routes/dailycsv/",Sys.Date(),"/",route_id,".csv", sep = "")
         
       }  
       
       if ( dir_schema == "dir1routes") {
         
-        file_path <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir1routes/",route_id,".geojson", sep = "")
-        
+        file_path_geojson <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir1routes/dailygeojson/",Sys.Date(),"/",route_id,".geojson", sep = "")
+        file_path_csv <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir1routes/dailycsv/",Sys.Date(),"/",route_id,".csv", sep = "")
       }
       
-      write(route_geojson, file_path)
+      write(route_geojson, file_path_geojson)
+      
+      write.csv(route_df[,2:length(names(route_df))], file_path_csv)
       
     }
   }
 }
+
+
 
   
