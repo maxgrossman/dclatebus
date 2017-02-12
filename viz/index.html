@@ -52,7 +52,7 @@
             
             }
             
-            .header_el {
+            .headerElement {
                 padding-left: 10px;
                 color: rgba(250,250,250,1);
                 font-size: 12px;
@@ -62,7 +62,7 @@
 
             }
             
-            .header_el #button {
+            .headerElement #button {
                 border: none;
                 border-radius: 4px;
                 margin: 15px 0 25px 0;
@@ -72,18 +72,18 @@
                 width: 55px;
             }
             
-            .header_el #button:hover {
+            .headerElement #button:hover {
                 
                 background: rgba(250,250,250,.6);
 
             }
             
-            #header_title {
+            #headerTitle {
                 
                margin-bottom:-15px;
             }
                    
-            .dropdown_lst {
+            .dropdownList {
                 
                 background: rgba(250,250,250,.3);
                 border: none;
@@ -91,7 +91,7 @@
                 width:125px;
             }
             
-            .dropdown_lst:hover {
+            .dropdownList:hover {
                 
                 background: rgba(250,250,250,.6);
             }
@@ -109,7 +109,7 @@
                 
             }
 
-            .lateness_info {
+            .latenessInfo {
                 background-color: rgba(57,57,57,.65);
                 border-radius: 4px;
                 box-shadow: 0 0 15px  rgba(0,0,0,.5);
@@ -118,13 +118,13 @@
                 top: 5px;
             }
             
-            .lateness_info h4 {
+            .latenessInfo h4 {
                 font: 16px Arial;
                 margin: 0 0 5px;
                 
             }
             
-            .lateness_info p {
+            .latenessInfo p {
                 font: 11px Arial;
                 margin: 0 0 5px;
                 
@@ -132,11 +132,11 @@
             
             @media screen and (max-height:575px) {
                 
-                .lateness_info { bottom:20px; }
+                .latenessInfo { bottom:20px; }
                 
             }
             
-            #slidecont {
+            #slideContent {
                 width:100%;
                 position: relative;
                 margin-bottom: -10px
@@ -179,7 +179,7 @@
                 
             }
             
-            .route_view {
+            .routeView {
                 top:230px;
                 height: 30px;
                 width: 22.5px;
@@ -191,14 +191,14 @@
                 vertical-align: middle;
             }
             
-            .route_view img {
+            .routeView img {
                 position:relative;
                 left: -2px;
                 width: 130%;
                 
             }
                 
-            .route_view p {
+            .routeView p {
                 
                 color: rgba(255,255,255,0);
                 left: -6px;
@@ -208,7 +208,7 @@
                 
             }
             
-            .route_view:hover p {
+            .routeView:hover p {
                 
                 color: rgba(255,255,255,1);
                 
@@ -222,31 +222,31 @@
                 
         <div id = "header">
             
-            <div class="header_el" id="header_title">
+            <div class="headerElement" id="headerTitle">
                 <p style="font-size: 20px; font-family:Century Schoolbook; font-style: oblique; letter-spacing:1.5px;"><b>DC Latebus</b></p>
             </div>
 
-            <div class="header_el" id="var_select">
-                <p class="dropdown_el"><b>Select variable to map</b></p>
-                <select class="dropdown_lst" id="map_variable">
+            <div class="headerElement" id="varSelect">
+                <p><b>Select variable to map</b></p>
+                <select class="dropdownList" id="mapVariable">
                     <option></option>
                     <option value="1">Lateness</option>
                     <option value="2">Bus Location</option>
                 </select>                
             </div>
             
-            <div class="header_el" id="rt_select">  
-                <p class="dropdown_el"><b>Select route to map</b></p>
-                <select class="dropdown_lst" name="routes_dropdown" id="map_route">
+            <div class="headerElement" id="routeSelect">  
+                <p ><b>Select route to map</b></p>
+                <select class="dropdownList" name="routesDropdown" id="mapRoute">
                     <option></option>
                 </select>  
             </div>
             
-            <div class="header_el" id="slidecont">
-                <p><b>Select a bus to map</b><p><select class="dropdown_lst" id="busses_dropdown"></select>
+            <div class="headerElement" id="slideContent">
+                <p><b>Select a bus to map</b><p><select class="dropdownList" id="bussesDropdown"></select>
             </div>
             
-            <div class="header_el" id="buttons_div">
+            <div class="headerElement" id="buttonsDiv">
                 <button id="button">Map</button>
                 <button id="button" onClick="window.location.reload();" style="margin-left:10px;">Reset</button>
             </div>
@@ -260,990 +260,691 @@
         
     <script type="text/javascript">
         
+        // add map with tiles, and extent restrictions                 
         var map = L.map('map', {
             
             zoomControl: false
-                
-        }).setView([38.89,-77.0369],11);
+        
+        })
+        
+        map.setView([38.89,-77.0369],11);
+        
+        var tiles = "https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWF4Z3Jvc3NtYW4iLCJhIjoiY2loZTQ5bHpxMGlyaXRwbHpsN3FscjA3bSJ9.ry1OJsQ5SCbhrH7fYd7adg"
+        
+        var attribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                          '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>,' +
+                          'Imagery © <a href="http://mapbox.com">Mapbox</a>'
             
-        var baselayer = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWF4Z3Jvc3NtYW4iLCJhIjoiY2loZTQ5bHpxMGlyaXRwbHpsN3FscjA3bSJ9.ry1OJsQ5SCbhrH7fYd7adg', {
+        var baselayer = L.tileLayer(tiles, {
             maxZoom: 18,                
             minZoom: 11,                
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-                    '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-                    'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+            attribution: attribution,
             id: 'mapbox.streets'
+                
         })
             
         baselayer.addTo(map);        
         
+        // a scale too because distance matters. 
         L.control.scale().addTo(map);
 
-        
-        // initialize global control/handler/data variables so they can be implemented in/out multiple function scopes
+        // global variables used in and outside different function scopes //
         
         // control displaying segment lateness data
-        var lateness_info = L.control({position: 'topright'});
+        var latenessInfo = L.control({position: 'topright'});
         
-        lateness_info.onAdd = function(map) {
-
-            this._div = L.DomUtil.create('div', 'lateness_info');
+        latenessInfo.onAdd = function(map) {
+            
+            this._div = L.DomUtil.create('div', 'latenessInfo');
             this.update();
             return this._div;
+            
         };    
         
-        // control allowing see bus on different segments @ different times
+        // slider to show bus position along route at different times
         var sliderControl = L.control.sliderControl({
-
+            
                                 follow: 1,
                                 position: "topleft"
-
+            
                             });
         
-        // handler variable helping conditional statements figure out to map new route or continue displaying previosly shown route
-        var selected_route = ''
+        // variable holding rawgit link to geojson.
+        var selectedRoute = ''
         
-        // data variable holding route geojson layer styled to display segment lateness
+        // variable holding route GeoJSON.
         var routeGeoJson = ''
-
-        // data variable holding colelction of maker layers
-        var busses = ''
         
-        // handler variable holding previous drop down selection so conditional statments in function on line 321 can hide/show them and adjust #header div height accordingly
-        var variable_selected = ''
+        // variable helping adjust height of #header div based on user selection
+        var variableSelected = ''
+        
+        //Control layer and control loading 
+        var Clicks = 0;  
+        
+        //function to map lateness. Clicks and needToMapRoute help guide whether to remove/leave geojson
+        var mapLateness = function(selectedRoute, Clicks, needToMapRoute) {
+            
+            needToMapRoute = needToMapRoute
+            
+            Clicks = Clicks
+            
+            //if second+ time clicking map button...
+            if(Clicks > 1) { 
                 
-        // call github api to get contents of viz/day_routes sub folder, holding route geojsons
-        // create day_routes list of 'download_urls', the rawgit urls for routes that can be loaded into leaflet
+                // if bus locatoins was previously mapped, get rid of bus location control and layers
+                if($(".leaflet-marker-pane img").length == 1) {
+
+                    sliderControl.getContainer().innerHTML = ''
+                    sliderControl._layer = ''
+                    $('.leaflet-marker-pane').empty()
+                    needToMapRoute = true          
+                    routeGeoJson.clearLayers()
+
+                }
+
+            }           
+            
+            //if we need to map new layer, decided with if/else statments below, then map selectedRoute and add neccessary controls
+            if(needToMapRoute == true) {
+                
+                $.getJSON(selectedRoute, function(data) {
+
+                selectedRoute = data;
+
+                // on load, create geojson with style and interactivity functionality                          
+                routeGeoJson = L.geoJson(selectedRoute, {
+
+                    style: function(feature) {
+
+                        return {             
+
+                            "color": feature.properties.dev_col,                            
+                            "lineCap": "butt",
+                            "opacity": 0.7,
+                            "weight": 3          
+
+                        };
+
+                    },
+
+                    //set events that occur when interacting with each routeGeoJson segment
+                    onEachFeature: function(feature, layer) {
+
+                        // on segment mouseover, increase size & opacity
+                        layer.on('mouseover', function() {
+
+                            this.setStyle({
+
+                                opacity:1,
+                                "weight": 4
+
+                            });
+
+                            // handle non-chrome/firefox
+                            if (L.Browser.ie && !L.Broswer.opera && !L.Browser.edge) {
+
+                                this.bringToFront();
+
+                            }
+
+                            // send mouseovered segment properties to latenessInfo control
+                            latenessInfo.update(this.feature.properties);
+
+                        });
+
+                        // on segment click, zoom to segment bounds, add button to zoom to route extent
+                        layer.on('click', function() {
+
+                            if(map.resetRouteView) {}
+
+                            else {
+
+                                map.fitBounds(this.getBounds());
+                                map.addControl(new resetRouteView());
+
+                            }
+                        });
+
+                        // when mouseout, or hover end, reset segment to original style, reset latenessInfo
+                        layer.on('mouseout', function() {
+
+                            routeGeoJson.resetStyle(this);
+                            latenessInfo.update();
+
+                        });
+
+                        return routeGeoJson                
+
+                    }}).addTo(map);
+
+                //fit map extent to route extent
+                map.fitBounds(routeGeoJson.getBounds())
+
+                //button that allows change from segment extent to route extent 
+                var resetRouteView = L.Control.extend({
+
+                        options: {
+
+                            position: 'topleft'
+
+                        },
+
+                        onAdd: function(map) {
+
+                            // when added, create variable holding routeViewdiv and the control. also set innerHTML
+                            var routeViewDiv = L.DomUtil.create('div', 'routeView');
+                            map.resetRouteView = this;
+                            routeViewDiv.innerHTML = "<img src='dc.png'/><p>Click to reset scale</p>"
+
+                            // when routeViewDiv clicked, reset bounds to routeGeoJson's, remove control from map and its corresponding variable
+                            $(routeViewDiv).on('click', function () {
+
+                                map.fitBounds(routeGeoJson.getBounds());
+                                map.removeControl(this);
+                                delete map.resetRouteView;
+
+                            });
+
+                            return routeViewDiv
+
+                        }
+
+                    });
+
+                //take the mouseovered segment and fit it into the latenessInfo div accordingly
+                latenessInfo.update = function(props) {
+
+                    // push relevent stats from mouseovered segment to dev_stats list
+                    dev_stats = []
+                    if(props) {
+
+                        seg_stops = props.seg_stops;
+                        dev_stats.push(parseInt(props.deviations_median));
+                        dev_stats.push(parseInt(props.deviations_max));
+                        dev_stats.push(parseInt(props.deviations_min));
+
+                    }
+
+                    //Since a positive deviation means a bus is late, create strings latness, ontimeness, and earliness
+                    $.each(dev_stats, function(i, item) {
+
+                    //Show bus as ahead of schedule and use proper grammar, because it matters.
+                    if(item < 0) {
+
+                        if(item/-1 == 1) {
+
+                            dev_stats[i] = (item * -1).toString() + " minute <span class='ahead'>ahead</span> of schedule"
+
+                        } 
+
+
+                        else { 
+
+                            dev_stats[i] = (item * -1).toString() + " minutes <span class='ahead'><b>ahead</b></span> of schedule"
+
+                        }
+                    }
+
+                    //Say it how it is. on time.
+                    else if(item == 0) {
+
+                        dev_stats[i] = 'on time'
+
+                    } 
+
+                    //Show bus as behind schedule, still remembering grammar.
+                    else {
+
+                        if(item/1 == 1) {
+
+                            dev_stats[i] = item.toString() + " minute <span class='behind'><b>behind</b></span> of schedule"
+
+                        }
+
+                        else { 
+
+                                    dev_stats[i]= item.toString() + " minutes <span class='behind'><b>behind</b></span> schedule"
+
+                        }
+
+                    }
+
+                    });
+
+                    //Add strings to contents
+                    var contents = '<h4><b>Bus Lateness</b></h4>' + (props ? '<p><b>Segment : </b> ' + seg_stops + '</p>' + '<p><b>Median Lateness :</b> ' + dev_stats[0] + ' </p>' + '<p><b>Max Lateness : </b>' + dev_stats[1] + ' </p>' + '<p><b>Min Lateness : </b>' + dev_stats[2] + ' </p>' : '<p>Hover over route segment</p>');
+
+                    //NaN in contents means segment's deviation values were null. nulls mean no data was selected from that segment. Reflect that in contents.
+                    if(contents.includes("NaN")) {
+
+                        contents = '<h4><b>Bus Lateness</b></h4>' + '<p><b>Segment : </b> ' + props.seg_stops + '</p>' + '<p><i>Data was not collected on this segment</i></p>' + '';
+
+                    }
+
+                    // make contents the innerHTML
+                    this._div.innerHTML = contents
+
+                }
+
+                //add latenessInfo to the map
+                latenessInfo.addTo(map);
+
+                //return routeGeoJson to be used elsewhere.
+                return selectedRoute   
+
+            });
+                
+            }
+            
+
+        }
+        
+        //function that populates bussesDropdown and returns list of busMarkers
+        var getBusses = function(selectedRoute) {
+
+            $.getJSON(selectedRoute, function(data) {
+
+                selectedRoute = data;
+
+                //object that will hold midpoint of each route segment, the route bus's number and the times of day each bus was at a given segment
+                var routeBusPnts = {};
+
+                //add seg_id, coordinates, and properties to routeBusPnts for those segments with busses
+                $.each(selectedRoute.features, function(key,val) {
+
+                    $.each(val, function(i,j) { 
+
+                        //rule out segments that did not include busses becuase null deviation indicates no busses were selected 
+                        if(val.properties.deviations_min === "null") {} 
+
+                        //add what we want to routeBusPnts for that segment
+                        else { 
+
+                            routeBusPnts[val.properties.seg_id] = [val.geometry.coordinates,val.properties] 
+
+                        }
+                    })
+
+                })	
+
+                //change coordinates to midpoint of segment. eventually this should be changed to the true location of the bus (we need to chnage some R code.)
+                $.each(routeBusPnts, function(i,item){
+
+                    // if # points even, generate a lat,lng between middle two lat, if odd, select the middle lat/lnt
+                    if(routeBusPnts[i][0].length % 2 == 0) { 
+
+                        routeBusPnts[i][0] = [(item[0][item[0].length/2][0] + item[0][item[0].length/2 + 1][0])/2,		
+                                              (item[0][item[0].length/2][1] + item[0][item[0].length/2 + 1][1])/2]
+                    } 
+
+                    else {
+
+                        routeBusPnts[i][0] = [item[0][(item[0].length + 1)/2][0], 
+                                             item[0][(item[0].length + 1)/2][1]]
+                    }
+
+                    //remove those key,val pairs where key has "dev" and do the same where key has "seg". we done need these.
+                    for (key in item[1]) {
+
+                        if(key.match("dev")) {delete item[1][key]} 
+                        if(key.match("seg")) {delete item[1][key]} 
+
+                    }
+
+                });
+
+                //list holding each timestamp for which busses were queried in 'route_lateness.R'. these times are held in keys for properties in routeGeoJson
+                busTimes = [];
+
+                //add those query times to busTimes
+                $.each(routeBusPnts, function(i,item) {
+
+                for(key in item[1]) {
+
+                    // times are saved like: "querytime_someotherstuff", so I grab time stamp, not the other stuff
+                    queryTime = key.split("_")[0]
+                    if(key.match(queryTime)) {
+
+                        busTimes.push(queryTime)
+
+                    }
+
+                }});
+
+                //extract the unique querytimes since there are duplicates.s                 
+                busTimes = $.unique(busTimes);
+
+                //lst of l.markers representing each bus
+                busMarkers = [];   
+
+                //icon for the bus. thanks for maki mapbox
+                var myIcon = L.icon({
+
+                    iconUrl: 'bus_icon_blk.png',
+                    iconSize: [20, 20],
+                    popupAnchor: [-3, -76]
+
+                });
+
+                //for each segment in route, find segments with queryTimes that match busTimes[i] and extract the information
+                $.each(routeBusPnts, function(i,item) {
+
+                    for(var i = 0; i < busTimes.length; i++) {
+
+                        for(key in item[1]) {
+
+                            if(key.match(busTimes[i])) {
+
+                                //time here is note the timestamp of my api query, but the timestamp attribute of the bus (see DateTime here --> tinyurl.com/zl65cqv)
+                                if(key.match("time")) {busTime=item[1][key]} 
+                                //Bus's id
+                                if(key.match("bus"))  {busId=item[1][key]}
+
+                            }
+                        }          
+                    }
+
+                    //add marker, using each feature in routeBusPnt's coordinates, myIcon, the time, and title.
+                    busMarkers.push(L.marker([item[0][1],item[0][0]], {icon: myIcon , opacity: 1, time: busTime, title:busId, riseOnHover:true}))        
+
+                });
+
+                //create busIds, with bus ids, and fill bussesDropdown with those ids
+                var busIds = [];    
+
+                $.each(busMarkers, function(i, item) {
+
+                    busIds.push(item.options.title)
+
+                });
+
+                //get rid of duplicates
+                busIds = $.unique(busIds)
+
+                $.each(busIds, function(i, item) {
+
+                    $("#bussesDropdown").append($("<option></option>")
+                                        .val(item)
+                                        .html(item));
+
+                });
+
+                return busMarkers
+
+            })                         
+
+
+}
+        
+        // function that maps busses. busMakers map makers and Clicks & needToMapRoute do same as they do in mapLatenesss
+        var mapBusses =function(selectedRoute, busMarkers, Clicks, needToMapRoute) {
+            
+            needToMapRoute = needToMapRoute;
+            
+            Clicks = Clicks;
+            
+            selectedRoute = selectedRoute;
+
+            if(Clicks > 1) {
+        
+                //when we haven't changed the route we want to map, just the bus, then empty control and take markers off the map pane
+                if($(".leaflet-marker-pane img").length == 1) {
+
+                    sliderControl.getContainer().innerHTML = ''
+                    sliderControl._layer = ''
+                    $('.leaflet-marker-pane').empty()
+                    
+                }
+                
+                // when wer're mapping bus location after lateness, get rid lateness control/route, and set needToMapRoute so we can map bus location
+                else {
+
+                    latenessInfo.getContainer().innerHTML = ''
+                    routeGeoJson.clearLayers();
+                    needToMapRoute = true
+
+                }   
+
+            }
+
+            //find those markers in busMarkers that have same BusId as that in bussesDropdown and add the markerToMap
+            var markersToMap = [];
+
+            $.each(busMarkers, function(i, item) {
+
+                if(item.options.title == $("#bussesDropdown").val() ) {
+
+                    markersToMap.push(item)
+
+                }
+
+            });
+
+            //sort markers in markersToMap by timestamp.
+            markersToMap = markersToMap.sort(function(a,b) {
+
+                return new Date(a.options.time).getTime() - new Date(b.options.time).getTime()
+
+            });
+
+            //add markers to map to sliderControl, add sliderControl to map, and start the slider
+            sliderControl._layer = L.layerGroup(markersToMap);
+
+            sliderControl.addTo(map);
+
+            sliderControl.startSlider();
+            
+            if(needToMapRoute == true) {
+                
+                //add route to map, make each segemnt white, and fit extent to bounds of route
+                routeGeoJson = $.getJSON(selectedRoute, function(data) {
+                
+                selectedRoute = data
+                
+                routeGeoJson = L.geoJson(selectedRoute, {
+                    
+                    style: {
+
+                        "color": "rgba(200,200,200,1)",                            
+                        "lineCap": "round",
+                        "weight": 2                        
+                    }
+                    
+                })
+                
+                routeGeoJson.addTo(map);
+                map.fitBounds(routeGeoJson.getBounds())
+                
+                })
+      
+            }
+          
+        } 
+                                
         $(document).ready(function() {
-                
+            
+            // get routes from github api
             $.getJSON("https://api.github.com/repos/maxgrossman/dclatebus/contents/viz/day_routes", function (data) {
-                
+                 
+                // append each to dropdown, displaying file name
                  $.each(data, function(i, item) {
-                        
-                    $("#map_route").append( $("<option></option>")
-                                   .val(data[i].download_url)
-                                   .html(data[i].download_url.split("/day_routes/")[1].split(".")[0]) )});
+                     
+                    $("#mapRoute").append( $("<option></option>")
+                                  .val(data[i].download_url)
+                                  .html(data[i].download_url.split("/day_routes/")[1].split(".")[0]) )});
                 
             });
             
+            // show selection dropdowns and increase #header height upon dropdown selections
             // function to show selection dropdowns and extend #header height upon successive dropdown selections
             $(function() {
                 
                 // set each div in #header as hidden
-                $('#rt_select').hide();
-                $('#buttons_div').hide();
-                $('#slidecont').hide();
+                $('#routeSelect').hide();
+                $('#buttonsDiv').hide();
+                $('#slideContent').hide();
                 
                 // set header height to height of title and first dropdown
-                $('#header').height($('#header_title').height() + $('#var_select').height())
+                $('#header').height($('#headerTitle').height() + $('#varSelect').height())
                 
                 // counter to control height extensions, only allowing allowing height to be increased one time
-                select_counter = 0
+                selectCounter = 0
                 
                 // function that increases height and shows #rt_select div when 'variable to map' is selected
-                $("#var_select").change(function() {
+                $("#varSelect").change(function() {
                     
                     // make select_counter 1 so to control if statement to occur only once
-                    select_counter = select_counter + 1
+                    selectCounter = selectCounter + 1
                     
-                    if($('#map_variable option').is(':selected') && select_counter == 1) {
+                    if($('#mapVariable option').is(':selected') && selectCounter == 1) {
                         
-                        $('#header').height($('#header').height() + $('#rt_select').height())
-                        $('#rt_select').show();
+                        $('#header').height($('#header').height() + $('#routeSelect').height())
+                        $('#routeSelect').show();
                                             
                     }
                     
-                     else if ($('#map_variable').val() == '1' && variable_selected == '2') {
+                     else if ($('#mapVariable').val() == '1' && variableSelected == '2') {
                         
                         $('#header').height(210)
-                        $('#buttons_div').show();
-                        $('#buttons_div').css({marginTop : '5px'})
-                        $('#slidecont').hide()
+                        $('#buttonsDiv').show();
+                        $('#buttonsDiv').css({marginTop : '5px'})
+                        $('#slideContent').hide()
                         $("#leaflet-slider").css({ top: "225px" })
-                        variable_selected = $('#map_variable').val()
+                        variableSelected = $('#mapVariable').val()
                         
                         
                     }
                     
-                    else if ($('#map_variable').val() == '2' && variable_selected == '1') {
+                    else if ($('#mapVariable').val() == '2' && variableSelected == '1') {
                         
                         $('#header').height(265)
-                        $('#buttons_div').show();
-                        $('#slidecont').show();
+                        $('#buttonsDiv').show();
+                        $('#slideContent').show();
                         $("#leaflet-slider").css({ top: "280px" })
-                        variable_selected = $('#map_variable').val()
+                        variableSelected = $('#mapVariable').val()
                         
                     }
                     
                     
                 });
                 
-                $("#rt_select").change(function() {
+                $("#routeSelect").change(function() {
                 
-                    if ($('#map_route option').is(':selected') && $('#map_variable').val() != 2) {
+                    if ($('#mapRoute option').is(':selected') && $('#mapVariable').val() != 2) {
                         
                         $('#header').height(210)
-                        $('#buttons_div').show();
-                        $('#buttons_div').css({marginTop : '5px'})
+                        $('#buttonsDiv').show();
+                        $('#buttonsDiv').css({marginTop : '5px'})
                         
-                        variable_selected = $('#map_variable').val()
+                        variableSelected = $('#mapVariable').val()
                         
                     }
                     
-                    else if ($('#map_route option').is(':selected') && $('#map_variable').val() == 2) {
+                    else if ($('#mapRoute option').is(':selected') && $('#mapVariable').val() == 2) {
                         
                         $('#header').height(265)
-                        $('#buttons_div').show();
-                        $('#slidecont').show();
+                        $('#buttonsDiv').show();
+                        $('#slideContent').show();
                         
-                        variable_selected = $('#map_variable').val()
+                        variableSelected = $('#mapVariable').val()
                                 
                     }
                         
                 })
                 
-                $("#map_route").change(function() {
-
-                    $("#busses_dropdown").empty();
+                $("#mapRoute").change(function() {
                     
-                    $.getJSON($( "#map_route" ).val(), function(data) {
-                       
-                            bussesGeoJson = data;
-   
-                            // create empty object that will hold midpoint of each segment as well as the bus# & its correspond time of day
-                            geojson_buspnts = {};
-                   
-                            // iterate through geojson, adding to geojson_buspnts only geom & busses where busses were selected
-                            $.each(bussesGeoJson.features, function(key,val) {
+                    selectedRoute = $( "#mapRoute" ).val()
 
-                                $.each(val, function(i,j) { 
-
-                                    if(val.properties.deviations_min === "null") {} 
-
-                                    else { geojson_buspnts[val.properties.seg_id] = [val.geometry.coordinates,val.properties] }
-
-                                })
-                            
-                            })	
-                            
-                            // reset the geom to segments' midpoint coordinates and remove deviation and seg_id properties from nested objects
-                            $.each(geojson_buspnts, function(i,item){
-
-                                // where length of points is even, generate a lat/lng 1/2 way between middle two lat/lng  
-                                // where length of points is odd, select the middle lat/lnt
-                                if(geojson_buspnts[i][0].length % 2 == 0) { 
-
-                                    geojson_buspnts[i][0] = [(item[0][item[0].length/2][0] + item[0][item[0].length/2 + 1][0])/2,		
-                                                             (item[0][item[0].length/2][1] + item[0][item[0].length/2 + 1][1])/2]
-
-                                } 
-                                
-                                else {
-
-                                    geojson_buspnts[i][0] = [item[0][(item[0].length + 1)/2][0],		
-                                                            item[0][(item[0].length + 1)/2][1]]
-                                }
-                     
-                                //remove those key,val pairs where key has "dev", and do the same where key has "seg"
-                                
-                                for (key in item[1]) {if(key.match("dev")) {delete item[1][key]} }
-                                                            });
-                
-                            bus_times = [];
-                   
-                            $.each(geojson_buspnts, function(i,item) {
+                    $("#bussesDropdown").empty();
                     
-                                for(key in item[1]) {
-
-                                    if(key.match(key.split("_")[0])) {bus_times.push(key.split("_")[0])}
-
-                                }                
-
-                            });
-                   
-                            bus_times = $.unique(bus_times);
-
-                            bus_markers = [];
-                   
-                            var myIcon = L.icon({
-                                iconUrl: 'bus_icon_blk.png',
-                                iconSize: [20, 20],
-                                popupAnchor: [-3, -76]
-
-                            });
-
-                            $.each(geojson_buspnts, function(i,item) {
-
-                                    for(var i = 0; i < bus_times.length; i++) {
-
-                                        for(key in item[1]) {
-
-                                            if(key.match(bus_times[i])) {
-
-                                                if(key.match("time")) {bustime=item[1][key]} 
-
-                                                if(key.match("bus")) {busid=item[1][key]}
-                                                
-                                                if(key.match("seg")) {bus_seg=item[1][key]}
-                                            }
-                                        }          
-                                    }
-
-                                bus_markers.push(L.marker([item[0][1],item[0][0]], {icon: myIcon , opacity: 1, time: bustime, title:busid, alt:bus_seg, riseOnHover:true}))        
-
-                            });
-                        
-                            console.log(bus_markers);
-               
-                            var bus_ids = [];    
-                       
-                            $.each(bus_markers, function(i, item) {
-                                
-                                bus_ids.push(item.options.title)
-                            
-                            });
-                       
-                            bus_ids = $.unique(bus_ids)
-            
-                            $.each(bus_ids, function(i, item) {
-                                
-                                $("#busses_dropdown").append( $("<option></option>")
-                                   .val(item)
-                                   .html(item));
-                                
-                            });
-                       
-                        })                         
+                    getBusses(selectedRoute)
                     
                 });
 
             });
-            
-            // Clicks variable to control layer and control loading
-            var Clicks = 0;       
-            
-            // function where if map button clicked first time, neccessary layers, controls, and menu options are loaded.
-            // then, if clicked a second+ time, previously loaded layers are removed and new ones are added
-            
+                 
+            //If map button clicked first time add layers and controls per dropdown selections. If clicked second time, remove what is there and add whatever is in the dropdown.
             $("#button").on("click", function() {
                 
-                // add 1 to Clicks value each time #button button is clicked
+                //add 1 to Clicks value each time #button is clicked. helps figure out if clicked first or second+ time.
                 Clicks++
                 
-                // events to trigger if clicked first time
                 if( Clicks == 1) {
                     
-                    // string for geojson. used so user cannot map same route twice and so if they want to map new route they can.
-                    selected_route = $( "#map_route" ).val()    
+                    //save selectedRoute in previousRoute so when Clicks > 1, we can figure out if user is trying is trying to map new route or not.
+                    previousRoute = selectedRoute
                     
-                    // if lateness is selected in first dropdown, load layer from github url and add to map along with controls
-                    if($("#map_variable").val() == 1) {
+                    //if lateness is selected in first dropdown, map that lateness and its controls
+                    if($("#mapVariable").val() == 1) {
                        
-                        $.getJSON($( "#map_route" ).val(),function(data) {
-
-                            // on load, create geojson with style and interactivity functionality 
-                            routeGeoJson = L.geoJson(data, {
-
-                                style: function(feature) {
-
-                                    return {                                                           
-                                        "color": feature.properties.dev_col,                            
-                                        "lineCap": "butt",
-                                        "opacity": 0.7,
-                                        "weight": 3                        
-                                    };
-                                    
-                                },
-
-                                onEachFeature: function(feature, layer) {
-
-                                    layer.on('mouseover', function() {
-
-                                        this.setStyle({
-
-                                            opacity:1,
-                                            "weight": 4
-
-                                        });
-
-                                    if (L.Browser.ie && !L.Broswer.opera && !L.Browser.edge) {
-
-                                        this.bringToFront();
-
-                                    }
-
-                                        lateness_info.update(this.feature.properties);
-
-                                    });
-
-                                    layer.on('click', function() {
-
-                                        if(map.resetRouteView) {
-
-                                        } else {
-
-                                            map.fitBounds(this.getBounds());
-                                            map.addControl(new resetRouteView());
-
-                                        }
-
-                                    });
-
-                                    layer.on('mouseout', function() {
-
-                                        routeGeoJson.resetStyle(this);
-
-                                        lateness_info.update();
-                                        
-                                    });
-
-                                }}).addTo(map);
-
-                                map.fitBounds(routeGeoJson.getBounds())
-
-                                //control to reset bounds when zoomed to route
-
-                                var resetRouteView = L.Control.extend({
-
-                                    options: {
-
-                                        position: 'topleft'
-                                    },
-
-                                    onAdd: function(map) {
-
-                                        var container = L.DomUtil.create('div', 'route_view');
-
-                                        map.resetRouteView = this;
-
-                                        $(container).on('click', function () {
-
-                                            map.fitBounds(routeGeoJson.getBounds());
-
-                                            map.removeControl(this);
-
-                                            delete map.resetRouteView;
-
-                                        });
-
-                                        container.innerHTML = "<img src='dc.png'/><p>Click to reset scale</p>"
-
-                                        return container;
-
-                                    }
-
-                                });
-                            
-                                lateness_info.update = function(props) {
-                                    
-                                   
-                                    dev_stats = []
-             
-                                    if(props) {
-                                        
-                                        seg_stops = props.seg_stops;
-                                        dev_stats.push(parseInt(props.deviations_median));
-                                        dev_stats.push(parseInt(props.deviations_max));
-                                        dev_stats.push(parseInt(props.deviations_min));
-                                        
-                                    }
-                                    
-                                    $.each(dev_stats, function(i, item) {
-
-                                            if(item < 0) {
-
-                                                if(item/-1 == 1) {
-
-                                                    dev_stats[i] = (item * -1).toString() + " minute <span class='ahead'>ahead</span> of schedule"
-
-                                                } else { 
-
-                                                dev_stats[i] = (item * -1).toString() + " minutes <span class='ahead'><b>ahead</b></span> of schedule"
-
-                                                }
-                                            } 
-
-                                            else if(item == 0) {
-
-                                                dev_stats[i] = 'on time'
-                                            } 
-
-                                            else {
-
-                                                if(item/1 == 1) {
-
-                                                    dev_stats[i] = item.toString() + " minute <span class='behind'><b>behind</b></span> of schedule"
-
-                                                } else { 
-
-                                                dev_stats[i]= item.toString() + " minutes <span class='behind'><b>behind</b></span> schedule"
-                                                }
-                                            }
-
-                                        });
-
-                                     contents = '<h4><b>Bus Lateness</b></h4>' + (props ? '<p><b>Segment : </b> ' + seg_stops + '</p>' + '<p><b>Median Lateness :</b> ' + dev_stats[0] + ' </p>' + '<p><b>Max Lateness : </b>' + dev_stats[1] + ' </p>' + '<p><b>Min Lateness : </b>' + dev_stats[2] + ' </p>' : '<p>Hover over route segment</p>');
-                                    
-                                    if(contents.includes("NaN")) {
-                                        
-                                        contents = '<h4><b>Bus Lateness</b></h4>' + '<p><b>Segment : </b> ' + props.seg_stops + '</p>' + '<p><i>Data was not collected on this segment</i></p>' + '';
-                                                
-                                    }
-                                                
-                                    
-
-                                    this._div.innerHTML = contents
-
-                                }
-
-                                lateness_info.addTo(map);
-                            
-                             return routeGeoJson   
-
-                            });
-
-                    } 
-
-                    // if bus location is selected in first dropdown, generate marker group of points located at center of 
-                    // seg to which bus location is attributed (mimicking bus location), add that as well as route and control to map
-                    if($("#map_variable").val() == 2) {
-
-                            var markers_to_map = [];
-
-                            $.each(bus_markers, function(i, item) {
-
-                                if(item.options.title == $("#busses_dropdown").val() ) {
-
-                                    markers_to_map.push(item)
-
-                                }
-                            });
-
-                            markers_to_map = markers_to_map.sort(
-
-                                function(a,b){ 
-
-                                    return new Date(a.options.time).getTime() - new Date(b.options.time).getTime()
-
-                                }
-
-                            );
-                           
-                            sliderControl._layer = L.layerGroup(markers_to_map);
-
-                            sliderControl.addTo(map);
-
-                            sliderControl.startSlider();
-
-                            busses = L.geoJson(bussesGeoJson, {
-
-                                style: {
-
-                                    "color": "rgba(200,200,200,1)",                            
-                                    "lineCap": "round",
-                                    "weight": 2                        
-                                }
-
-
-                            })
-                                
-                            busses.addTo(map);
-
-                            map.fitBounds(L.geoJson(bussesGeoJson).getBounds())
-
-                       }
-                
-                // events to trigger each > 1 time    
-                } else {
-                            
-                    // for lateness..        
-                    if($("#map_variable").val() == 1) {
-                        
-                        
-                        // use existance of marker to show previous selection was bus location, and as such remove
-                        // its control
-                        if($(".leaflet-marker-pane img").length == 1) {
-                            
-                            sliderControl.getContainer().innerHTML = ''
-                        
-                            sliderControl._layer = ''
-
-                            $('.leaflet-marker-pane').empty()
-
-                            busses.clearLayers();
-                            
-                            $.getJSON($( "#map_route" ).val(),function(data) {
-
-                                    // on load, create geojson with style and interactivity functionality 
-                                    routeGeoJson = L.geoJson(data, {
-
-                                        style: function(feature) {
-
-                                            return {                                                           
-                                                "color": feature.properties.dev_col,                            
-                                                "lineCap": "butt",
-                                                "opacity": 0.7,
-                                                "weight": 3                        
-                                            };
-                                        },
-
-                                        onEachFeature: function(feature, layer) {
-
-                                                layer.on('mouseover', function() {
-
-                                                    this.setStyle({
-
-                                                        opacity:1,
-                                                        "weight": 4
-
-                                                    });
-
-                                                if (L.Browser.ie && !L.Broswer.opera && !L.Browser.edge) {
-
-                                                    this.bringToFront();
-
-                                                }
-
-                                                    lateness_info.update(this.feature.properties);
-
-                                                });
-
-                                                layer.on('click', function() {
-
-                                                    if(map.resetRouteView) {
-
-                                                    } else {
-
-                                                        map.fitBounds(this.getBounds());
-                                                        map.addControl(new resetRouteView());
-
-                                                    }
-
-                                                });
-
-                                                layer.on('mouseout', function() {
-
-                                                    routeGeoJson.resetStyle(this);
-
-                                                    lateness_info.update();
-
-                                                });
-
-                                            }}).addTo(map);
-
-                                        map.fitBounds(routeGeoJson.getBounds())
-
-                                        //control to reset bounds when zoomed to route
-
-                                        var resetRouteView = L.Control.extend({
-
-                                            options: {
-
-                                                position: 'topleft'
-                                            },
-
-                                            onAdd: function(map) {
-
-                                                var container = L.DomUtil.create('div', 'route_view');
-
-                                                map.resetRouteView = this;
-
-                                                $(container).on('click', function () {
-
-                                                        map.fitBounds(routeGeoJson.getBounds());
-
-                                                        map.removeControl(this);
-
-                                                        delete map.resetRouteView;
-
-                                                    });
-
-                                                container.innerHTML = "<img src='dc.png'/><p>Click to reset scale</p>"
-
-                                                return container;
-
-                                            }
-
-                                        });
-
-                                        lateness_info.update = function(props) {
-                                    
-                                   
-                                    dev_stats = []
-             
-                                    if(props) {
-                                        
-                                        seg_stops = props.seg_stops;
-                                        dev_stats.push(parseInt(props.deviations_median));
-                                        dev_stats.push(parseInt(props.deviations_max));
-                                        dev_stats.push(parseInt(props.deviations_min));
-                                        
-                                    }
-                                    
-                                    $.each(dev_stats, function(i, item) {
-
-                                            if(item < 0) {
-
-                                                if(item/-1 == 1) {
-
-                                                    dev_stats[i] = (item * -1).toString() + " minute <span class='ahead'>ahead</span> of schedule"
-
-                                                } else { 
-
-                                                dev_stats[i] = (item * -1).toString() + " minutes <span class='ahead'><b>ahead</b></span> of schedule"
-
-                                                }
-                                            } 
-
-                                            else if(item == 0) {
-
-                                                dev_stats[i] = 'on time'
-                                            } 
-
-                                            else {
-
-                                                if(item/1 == 1) {
-
-                                                    dev_stats[i] = item.toString() + " minute <span class='behind'><b>behind</b></span> of schedule"
-
-                                                } else { 
-
-                                                dev_stats[i]= item.toString() + " minutes <span class='behind'><b>behind</b></span> schedule"
-                                                }
-                                            }
-
-                                        });
-
-                                     contents = '<h4><b>Bus Lateness</b></h4>' + (props ? '<p><b>Segment : </b> ' + seg_stops + '</p>' + '<p><b>Median Lateness :</b> ' + dev_stats[0] + ' </p>' + '<p><b>Max Lateness : </b>' + dev_stats[1] + ' </p>' + '<p><b>Min Lateness : </b>' + dev_stats[2] + ' </p>' : '<p>Hover over route segment</p>');
-                                    
-                                    if(contents.includes("NaN")) {
-                                        
-                                        contents = '<h4><b>Bus Lateness</b></h4>' + '<p><b>Segment : </b> ' + props.seg_stops + '</p>' + '<p><i>Data was not collected on this segment</i></p>' + '';
-                                                
-                                    }
-                                                
-                                    
-
-                                    this._div.innerHTML = contents
-
-                                }
-
-                                        lateness_info.addTo(map);
-
-                                        return routeGeoJson
-
-                                    });
-
-                        }
-     
-                        else if ($(".leaflet-marker-pane img").length == 0) {
-                            
-                            // if new route selected, remove old route and old control. then, add new route and update control
-                            if (selected_route != $( "#map_route" ).val()) {
-
-                                routeGeoJson.clearLayers()
-
-                                lateness_info.getContainer().innerHTML = ''
-
-                                $.getJSON($( "#map_route" ).val(),function(data) {
-
-                                    // on load, create geojson with style and interactivity functionality 
-                                    routeGeoJson = L.geoJson(data, {
-
-                                        style: function(feature) {
-
-                                            return {                                                           
-                                                "color": feature.properties.dev_col,                            
-                                                "lineCap": "butt",
-                                                "opacity": 0.7,
-                                                "weight": 3                        
-                                            };
-                                        },
-
-                                        onEachFeature: function(feature, layer) {
-
-                                                layer.on('mouseover', function() {
-
-                                                    this.setStyle({
-
-                                                        opacity:1,
-                                                        "weight": 4
-
-                                                    });
-
-                                                if (L.Browser.ie && !L.Broswer.opera && !L.Browser.edge) {
-
-                                                    this.bringToFront();
-
-                                                }
-
-                                                    lateness_info.update(this.feature.properties);
-
-                                                });
-
-                                                layer.on('click', function() {
-
-                                                    if(map.resetRouteView) {
-
-                                                    } else {
-
-                                                        map.fitBounds(this.getBounds());
-                                                        map.addControl(new resetRouteView());
-
-                                                    }
-
-                                                });
-
-                                                layer.on('mouseout', function() {
-
-                                                    routeGeoJson.resetStyle(this);
-
-                                                    lateness_info.update();
-
-                                                });
-
-                                            }}).addTo(map);
-
-                                        map.fitBounds(routeGeoJson.getBounds())
-
-                                        //control to reset bounds when zoomed to route
-
-                                        var resetRouteView = L.Control.extend({
-
-                                            options: {
-
-                                                position: 'topleft'
-                                            },
-
-                                            onAdd: function(map) {
-
-                                                var container = L.DomUtil.create('div', 'route_view');
-
-                                                map.resetRouteView = this;
-
-                                                $(container).on('click', function () {
-
-                                                        map.fitBounds(routeGeoJson.getBounds());
-
-                                                        map.removeControl(this);
-
-                                                        delete map.resetRouteView;
-
-                                                    });
-
-                                                container.innerHTML = "<img src='dc.png'/><p>Click to reset scale</p>"
-
-                                                return container;
-
-                                            }
-
-                                        });
-
-                                       lateness_info.update = function(props) {
-                                    
-                                   
-                                    dev_stats = []
-             
-                                    if(props) {
-                                        
-                                        seg_stops = props.seg_stops;
-                                        dev_stats.push(parseInt(props.deviations_median));
-                                        dev_stats.push(parseInt(props.deviations_max));
-                                        dev_stats.push(parseInt(props.deviations_min));
-                                        
-                                    }
-                                    
-                                    $.each(dev_stats, function(i, item) {
-
-                                            if(item < 0) {
-
-                                                if(item/-1 == 1) {
-
-                                                    dev_stats[i] = (item * -1).toString() + " minute <span class='ahead'>ahead</span> of schedule"
-
-                                                } else { 
-
-                                                dev_stats[i] = (item * -1).toString() + " minutes <span class='ahead'><b>ahead</b></span> of schedule"
-
-                                                }
-                                            } 
-
-                                            else if(item == 0) {
-
-                                                dev_stats[i] = 'on time'
-                                            } 
-
-                                            else {
-
-                                                if(item/1 == 1) {
-
-                                                    dev_stats[i] = item.toString() + " minute <span class='behind'><b>behind</b></span> of schedule"
-
-                                                } else { 
-
-                                                dev_stats[i]= item.toString() + " minutes <span class='behind'><b>behind</b></span> schedule"
-                                                }
-                                            }
-
-                                        });
-
-                                     contents = '<h4><b>Bus Lateness</b></h4>' + (props ? '<p><b>Segment : </b> ' + seg_stops + '</p>' + '<p><b>Median Lateness :</b> ' + dev_stats[0] + ' </p>' + '<p><b>Max Lateness : </b>' + dev_stats[1] + ' </p>' + '<p><b>Min Lateness : </b>' + dev_stats[2] + ' </p>' : '<p>Hover over route segment</p>');
-                                    
-                                    if(contents.includes("NaN")) {
-                                        
-                                        contents = '<h4><b>Bus Lateness</b></h4>' + '<p><b>Segment : </b> ' + props.seg_stops + '</p>' + '<p><i>Data was not collected on this segment</i></p>' + '';
-                                                
-                                    }
-                                                
-                                    
-
-                                    this._div.innerHTML = contents
-
-                                }
-
-                                lateness_info.addTo(map);
-
-                                        return routeGeoJson
-
-                                    });
-                            
-                            }
+                        mapLateness(selectedRoute, Clicks, true)
                     
-                        }
-                        
-                        selected_route = $( "#map_route" ).val() 
-                        
                     }
                     
-                    // for bus location current sliderControl, the layer it is reading, the glowing bus markers, and re-add them all!
-                    else if ($("#map_variable").val() == 2) {
-                        
-                        if($(".leaflet-marker-pane img").length == 1) {
+                    //if bus location is selected, map markers already in the busMarkers list and the bus locatoin styled route
+                    if($("#mapVariable").val() == 2) {
                             
-                            sliderControl.getContainer().innerHTML = ''
-                        
-                            sliderControl._layer = ''
-
-                            $('.leaflet-marker-pane').empty()
-
-                            busses.clearLayers();
-
-                            var markers_to_map = [];
-
-                            $.each(bus_markers, function(i, item) {
-
-                                if(item.options.title == $("#busses_dropdown").val() ) {
-
-                                     markers_to_map.push(item)
-
-                                 }
-                             });
-
-                            markers_to_map = markers_to_map.sort(
-
-                                function(a,b){ 
-
-                                   return new Date(a.options.time).getTime() - new Date(b.options.time).getTime()
-
-                                 }
-
-                            );
-
-                            sliderControl._layer = L.layerGroup(markers_to_map);
-
-                            sliderControl.addTo(map);
-
-                            sliderControl.startSlider();
-
-                            busses = L.geoJson(bussesGeoJson, {
-
-                                style: {
-
-                                        "color": "rgba(200,200,200,1)",                            
-                                        "lineCap": "round",
-                                        "weight": 2                        
-                                    }
-
-                            })
-
-                            busses.addTo(map);
-
-                            map.fitBounds(L.geoJson(bussesGeoJson).getBounds())  
-
-                        }
-                        
-                        else if ($(".leaflet-marker-pane img").length == 0) {
-                                                 
-                            routeGeoJson.clearLayers()
-
-                            lateness_info.getContainer().innerHTML = ''
-
-                            var markers_to_map = [];
-
-                            $.each(bus_markers, function(i, item) {
-
-                                if(item.options.title == $("#busses_dropdown").val() ) {
-
-                                     markers_to_map.push(item)
-
-                                 }
-                             });
-
-                            markers_to_map = markers_to_map.sort(
-
-                                function(a,b){ 
-
-                                   return new Date(a.options.time).getTime() - new Date(b.options.time).getTime()
-
-                                 }
-
-                            );
-
-                            sliderControl._layer = L.layerGroup(markers_to_map);
-
-                            sliderControl.addTo(map);
-
-                            sliderControl.startSlider();
-
-                            busses = L.geoJson(bussesGeoJson, {
-
-                                style: {
-
-                                        "color": "rgba(200,200,200,1)",                            
-                                        "lineCap": "round",
-                                        "weight": 2                        
-                                    }
-
-                            })
-
-                            busses.addTo(map);
-
-                            map.fitBounds(L.geoJson(bussesGeoJson).getBounds())  
-                        
-                        }
-                
-                    };
-
+                        mapBusses(selectedRoute, busMarkers, Clicks, true)
+                                  
+                    } 
+                    
                 }
                 
-            });
-            
-        });
-
-        
-
-        
-        
-        
+                // for second bus clicks
+                else if (Clicks > 1) {
+                                        
+                    // if we are choosing lateness      
+                    if($("#mapVariable").val() == 1) {
+                        
+                        // where a new route is being mapped, get rid of previous route and map the new one 
+                        if(previousRoute != selectedRoute) {
+                    
+                            routeGeoJson.clearLayers();            
+                            mapLateness(selectedRoute, Clicks, true)
+                                  
+                        }
+                        
+                        //if not, give pointer to mapLateness is still trying to map the same route. mapLatness, thanks to needToMapRoute will figure out if its late or bus loc.
+                        else {
                             
+                            mapLateness(selectedRoute, Clicks, false)
+                            
+                        }
+                        
+                        //set selectedROute to previousRoute, so if they try to map new route or keep it the same, it will be handed
+                        previousRoute = selectedRoute 
+                             
+                    }
                     
-                    
-                    
-                    
-                   
-        
-        
+                    //if bus locations was selected
+                    else if ($("#mapVariable").val() == 2) {
+                        
+                        //if new route, get rid of old one, and map the new
+                        if(previousRoute != selectedRoute) {
+                        
+                            routeGeoJson.clearLayers();
+                            mapBusses(selectedRoute, busMarkers, Clicks, true)
+                            
+                        } 
+                        
+                        //if same route, just like with lateness, give pointer its a new route and let mapBusses figure out if lateness or bus location.
+                        else {
+                            
+                            mapBusses(selectedRoute, busMarkers, Clicks, false)
+                              
+                        }
+                        
+                        // reset previous location.
+                        previousRoute = selectedRoute       
+                        
+                    }
+                };
                 
+            })
+                        
+        })
+        
         </script>
             
 
