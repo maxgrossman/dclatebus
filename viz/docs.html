@@ -1,0 +1,347 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<style>
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote {
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    color: #737373;
+    background-color: white;
+    margin: 10px 13px 10px 13px;
+}
+table {
+	margin: 10px 0 15px 0;
+	border-collapse: collapse;
+}
+td,th {	
+	border: 1px solid #ddd;
+	padding: 3px 10px;
+}
+th {
+	padding: 5px 10px;	
+}
+
+a {
+    color: #0069d6;
+}
+a:hover {
+    color: #0050a3;
+    text-decoration: none;
+}
+a img {
+    border: none;
+}
+p {
+    margin-bottom: 9px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: #404040;
+    line-height: 36px;
+}
+h1 {
+    margin-bottom: 18px;
+    font-size: 30px;
+}
+h2 {
+    font-size: 24px;
+}
+h3 {
+    font-size: 18px;
+}
+h4 {
+    font-size: 16px;
+}
+h5 {
+    font-size: 14px;
+}
+h6 {
+    font-size: 13px;
+}
+hr {
+    margin: 0 0 19px;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+}
+blockquote {
+    padding: 13px 13px 21px 15px;
+    margin-bottom: 18px;
+    font-family:georgia,serif;
+    font-style: italic;
+}
+blockquote:before {
+    content:"\201C";
+    font-size:40px;
+    margin-left:-10px;
+    font-family:georgia,serif;
+    color:#eee;
+}
+blockquote p {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 18px;
+    margin-bottom: 0;
+    font-style: italic;
+}
+code, pre {
+    font-family: Monaco, Andale Mono, Courier New, monospace;
+}
+code {
+    background-color: #fee9cc;
+    color: rgba(0, 0, 0, 0.75);
+    padding: 1px 3px;
+    font-size: 12px;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+pre {
+    display: block;
+    padding: 14px;
+    margin: 0 0 18px;
+    line-height: 16px;
+    font-size: 11px;
+    border: 1px solid #d9d9d9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+pre code {
+    background-color: #fff;
+    color:#737373;
+    font-size: 11px;
+    padding: 0;
+}
+sup {
+    font-size: 0.83em;
+    vertical-align: super;
+    line-height: 0;
+}
+* {
+	-webkit-print-color-adjust: exact;
+}
+@media screen and (min-width: 914px) {
+    body {
+        width: 854px;
+        margin:10px auto;
+    }
+}
+@media print {
+	body,code,pre code,h1,h2,h3,h4,h5,h6 {
+		color: black;
+	}
+	table, pre {
+		page-break-inside: avoid;
+	}
+}
+</style>
+<title>🚍 DC Latebus 🚍</title>
+
+</head>
+<body>
+<h1>🚍 DC Latebus 🚍</h1>
+
+<h3>Table of Contents</h3>
+
+<hr />
+
+<ul>
+<li><a href="#whatisthis">What is this?</a></li>
+<li><a href="#motivation">Motivation</a></li>
+<li><a href="#viz">Visualization</a>
+
+<ol>
+<li> <a href="#ssm">Super Small Manual</a></li>
+<li> <a href="#ssp">Super Small Pseudocode</a></li>
+</ol>
+</li>
+<li><a href="#dp">Data Processing</a>
+
+<ol>
+<li> <a href="#ssd">Super Small Description</a></li>
+<li> <a href="#nssp">Not So Small Pseudocode</a></li>
+</ol>
+</li>
+<li><a href="#ns">Next Steps</a></li>
+</ul>
+
+
+<hr />
+<a name="whatisthis"></a>
+<h2>What is this?</h2>
+
+<p>DC Latebus is a project intended to understand where, when, and how often public busses are ahead or behind schedule in DC.
+It achieves this by capturing, visualizing, storing, and analyzing public bus data provided by WMATA through its <a href="https://developer.wmata.com/">API</a>.</p>
+
+<p>The project consists of three components.</p>
+
+<ol>
+<li>A web visualization to illustrate busses' deviations schedule.</li>
+<li>A set of data processing scripts that use GIS techniques to transform data gathered from the API into a meaningful database.</li>
+<li>An ever growing database that holds project data.</li>
+</ol>
+
+<a name="motivation"></a>
+<h2>Motivation</h2>
+
+<p>The motivation for this project is three fold.</p>
+
+<ol>
+<li><p>First, I want to figure out where, when, and how often busses deviate from schedule because transit service reliability, which bus lateness runs counter to, is a key factor in peoples' transit choices.
+So, understanding reasons underlying a bus being late can inform planning measures to increase service reliability and hopefully the number of people who use the bus.</p></li>
+<li><p>Second, people of different socio-economic backgrounds take the bus to and from different places across the city, and may do so at different times during the day.
+So, understanding where and when busses are late can potentially point to communities who do not enjoy reliable bus service.</p></li>
+<li><p>Third, I think transit systems, programming, and geography rule. This project includes them all, so naturally it rules too.</p></li>
+</ol>
+
+<a name="viz"></a>
+<h2>Visualization</h2>
+<a name="ssm"></a>
+<h4>Super Small User Manual</h4>
+
+<p>Currently, the visualization has two components:</p>
+
+<ol>
+<li><p>An interactive map that shows the median daily deviation from schedule for segments along each bus route. Additionally this component shows information about bus stops and the minimum and maximum deviations for each segment along the route.</p></li>
+<li><p>An interactive map that shows busses that traveled along routes, illustrating where busses were throughout the day.</p></li>
+</ol>
+
+
+<h5>How does interact with the visualization?</h5>
+
+<p>Users show these different components with a user interface located on the page's top left. The interface can be used as follows:</p>
+
+<ol>
+<li><p>First select the 'variable to map', either 'Lateness' or 'Bus Location'</p></li>
+<li><p>Then select the 'route to map'. If you are mapping 'bus location', a busses dropdown will appear. Select the bus you want to map from there.</p></li>
+<li><p>Then map it!</p></li>
+</ol>
+
+
+<h5>Lateness</h5>
+
+<p><img src="Untitled2.gif" alt="lateness" /></p>
+
+<p>When mapping lateness, hovering over route segments tells more about the segment, like the bus stops a <br/>
+segment is in-between and other deviation statistics.</p>
+
+<h5>Lateness Button</h5>
+
+<p><img src="79datbutton.gif" alt="lateness_button" /></p>
+
+<p>If a user clicks on a segment, the app will zoom to its bounds. To zoom back out, click the button of<br/>
+DC that appears.</p>
+
+<h5>Bus Location</h5>
+
+<p><img src="busloc79.gif" alt="bus_loc" /></p>
+
+<p>When mapping bus location, a slider appears underneath the main user interface that users can use to show   <br/>
+where a given bus was throughout the day.</p>
+
+<h5>Reset button</h5>
+
+<p><img src="79reset.gif" alt="reste" /></p>
+
+<p>If at anytime a user wants to reset the app to its original state, just hit reset!</p>
+
+<a name="ssp"></a>
+<h4>Super Small Viz Pseudocode</h4>
+
+<p><img src="http://i.imgur.com/6v2AOTB.png" width="700" alt="buz_viz" /></p>
+
+<a name="dp"></a>    
+<h2>Data Processing</h2>
+
+<a name="ssd"></a>
+<h4>Super Small Description</h4>
+
+<p>Data processing for this project consisted of three steps:</p>
+
+<ol>
+<li>Create a template database with API route data that holds information about route segments for each route.
+
+<ul>
+<li>This is completed via route_seg_spatializer.R</li>
+</ul>
+</li>
+<li>Call API for bus location, then spatially query buses with route segments to attribute buses to segments.
+
+<ul>
+<li>This is done via route_lateness.R, run every 30 seconds with route_lateness.sh</li>
+</ul>
+</li>
+<li>Create GeoJSONs at the end of every day for each route. These files hold deviation statistics and info about busses queried by route segments
+
+<ul>
+<li>This is done via Day_GeoJSON_maker.R, run at end of the day within db_dropper_maker.sh</li>
+</ul>
+</li>
+</ol>
+
+<a name="nssp"></a>
+<h4>Not So Small Pseudocode </h4>
+
+<ul>
+<li>Below are pseudocode diagrams that explain the data processing portion of the project</li>
+</ul>
+
+
+<h6>route_seg_spatializer.R</h6>
+
+<p><img src="http://i.imgur.com/U6YJok5.png" width="850" alt="route_seg" /></p>
+
+<h6>route_lateness.R</h6>
+
+<p><img src="http://i.imgur.com/5nxTKq8.png" width="850" alt="route_lateness" /></p>
+
+<h6>route_seg_spatializer.R</h6>
+
+<p><img src="http://i.imgur.com/9il6QFK.png" width="700" alt="day_geo_maker" />
+<img src="http://i.imgur.com/23Vxiiy.png" width="850" alt="day_geo_more" /></p>
+
+<h2>Next Steps <a name="ns"></a></h2>
+
+<p>So what's next? A lot honestly.</p>
+
+<ol>
+<li><p>First and foremost, I need to switch from using PostGIS.
+PostgreSQL limits tables at 1600 columns. The frequency I run my scripts easily fills this up in 3 or 4 hours.</p></li>
+<li><p>Second, I need to devise a less sloppy means to save data to a database.
+My current approach, writing lists of dissimilar lengths to a 2-dimensional table works well for PostGIS, but because I have to worry about storage space, moving to something like MongoDB so I can mimique a JSON makes a lot of sense. Plus, this would limit the number of records I
+write upon each iteration of running route_lateness.R to only a handful. I'd imagine this would be much more efficient than my current method as I'd
+only write data to segments that buffer busses, rather than writing data to all segments like I am currently.</p></li>
+<li><p>Third, I need to give my visualization a finer temporal resolution and explore ways to use time as the control variable for what is visualized.
+To the first point, who cares if the bus was late an average of 5 minutes today?
+Peoples' daily commute times happen in a bandwidth of a few hours, perhaps between 6am and 10am or 5pm and 7pm. The viz would provide much better visual insight into when busses are late if I make this switch.
+To the later point, I might be better suited visualizing what underlies the second motivation if I'm showing where busses tend to be late at
+different times of the day throughout the entire system. Visualizing routes without comparison to other routes provide little insight.</p></li>
+<li><p>Forth, I need to research the subject myself and talk to <a href="https://geography.columbian.gwu.edu/michael-mann">my professor</a> about how to do time space clustering (think <a href="http://gisgeography.com/spatial-autocorrelation-moran-i-gis/">Moran's I</a> across time) for connected line segments. This sort of analysis can show if bus lateness across time and space is random or non-random. If I can make an assertion that lateness is not non-random, I can start looking into some of the 'motivations' for this project in-depth. Specifically, if I know lateness is not random at a certain place and time I can start to investigate why and share that with planners.</p></li>
+<li><p>Fifth, I need to talk to experts because I am not one.
+Taking only one transportation geography class isn't enough to claim I know what I'm doing,
+and those who think about bus systems for a living might help push me in the right direction as I continue with this project.</p></li>
+<li><p>Lastly, I need a partner (or partners) in crime. I want to get better at coding and learn from people. Building a team would help do that. Plus, just like I'm not an expert studier of transportation, I am not an expert geospatial developer, backend developer, front end developer, ect. Finding partners that are these things can make the final product better, which is ultimately what I care about.</p></li>
+</ol>
+
+
+<p><em>Thanks!</em> <br/>
+🚌  🚌  🚌</p>
+</body>
+</html>

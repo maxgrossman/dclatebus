@@ -19,6 +19,7 @@
             * {
                 
                 outline:none;
+                
             }
             
             .ahead {
@@ -39,6 +40,26 @@
                 
             }
             
+            #dayMapped {  
+                
+                background-color: rgba(57,57,57,.65);
+                border-radius: 4px;
+                box-shadow: 0 0 15px  rgba(0,0,0,.5);
+                color: rgba(250,250,250,0.8);
+                bottom: 0;
+                font-family: Arial;
+                font-size: 12px;
+                float:right;
+                height:40px;
+                position: fixed;
+                right: 15px;
+                margin-bottom:30px;
+                text-align: center;
+                vertical-align: middle;
+                width: 120px;
+                
+            }
+            
             #header {
                 background-color: rgba(57,57,57,.65);
                 border-radius: 4px;
@@ -55,8 +76,8 @@
             .headerElement {
                 padding-left: 10px;
                 color: rgba(250,250,250,1);
-                font-size: 12px;
                 font-family: Arial;
+                font-size: 12px;
                 margin: 0;
                 float: left;
 
@@ -95,8 +116,6 @@
                 
                 background: rgba(250,250,250,.6);
             }
-            
-            
             
             #map {
                 
@@ -223,7 +242,7 @@
         <div id = "header">
             
             <div class="headerElement" id="headerTitle">
-                <p style="font-size: 20px; font-family:Century Schoolbook; font-style: oblique; letter-spacing:1.5px;"><b>DC Latebus</b></p>
+                <p style="font-size: 20px; font-family:Century Schoolbook !important; font-style: oblique; letter-spacing:1.5px;"><b>DC Latebus</b></p>
             </div>
 
             <div class="headerElement" id="varSelect">
@@ -250,8 +269,10 @@
                 <button id="button">Map</button>
                 <button id="button" onClick="window.location.reload();" style="margin-left:10px;">Reset</button>
             </div>
-            
+        
         </div>
+        
+        <div id="dayMapped"></div>
         
         <div id='map'></div>
         
@@ -260,7 +281,7 @@
         
     <script type="text/javascript">
         
-        // add map with tiles, and extent restrictions                 
+        // add map with tiles and extent restrictions                 
         var map = L.map('map', {
             
             zoomControl: false
@@ -285,7 +306,7 @@
             
         baselayer.addTo(map);        
         
-        // a scale too because distance matters. 
+        // Add a scale 
         L.control.scale().addTo(map);
 
         // global variables used in and outside different function scopes //
@@ -312,26 +333,31 @@
         // variable holding rawgit link to geojson.
         var selectedRoute = ''
         
-        // variable holding route GeoJSON.
+        // variable holding routeGeoJSON. Allows to remove data from map when toggling between 'variables to map'
         var routeGeoJson = ''
         
         // variable helping adjust height of #header div based on user selection
         var variableSelected = ''
         
-        //Control layer and control loading 
+        // variable that helps control layer and control loading 
         var Clicks = 0;  
         
-        //function to map lateness. Clicks and needToMapRoute help guide whether to remove/leave geojson
+        // list of months used to take timestamp and convert to text date
+        var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        
+        // function to map lateness. Clicks and needToMapRoute help guide whether to remove/leave GeoJSON
+        // selectedRoute is the route selected to map
         var mapLateness = function(selectedRoute, Clicks, needToMapRoute) {
             
             needToMapRoute = needToMapRoute
             
             Clicks = Clicks
             
-            //if second+ time clicking map button...
+            // if second + time clicking map button...
             if(Clicks > 1) { 
                 
-                // if bus locatoins was previously mapped, get rid of bus location control and layers
+                // if bus location was previously mapped, get rid of bus location control and layers
                 if($(".leaflet-marker-pane img").length == 1) {
 
                     sliderControl.getContainer().innerHTML = ''
@@ -344,18 +370,19 @@
 
             }           
             
-            //if we need to map new layer, decided with if/else statments below, then map selectedRoute and add neccessary controls
+            // if we need to map new layer, needToMapRoute == true lets us do so. 
             if(needToMapRoute == true) {
                 
                 $.getJSON(selectedRoute, function(data) {
 
                 selectedRoute = data;
 
-                // on load, create geojson with style and interactivity functionality                          
+                // on load, create geojson with style and interactivity functionality                      
                 routeGeoJson = L.geoJson(selectedRoute, {
 
                     style: function(feature) {
-
+                        
+                        // dev_col is a hex color value generated in 'Day_GeoJSON_maker.R'
                         return {             
 
                             "color": feature.properties.dev_col,                            
@@ -367,7 +394,7 @@
 
                     },
 
-                    //set events that occur when interacting with each routeGeoJson segment
+                    // set events that occur when interacting with each routeGeoJson segment
                     onEachFeature: function(feature, layer) {
 
                         // on segment mouseover, increase size & opacity
@@ -380,7 +407,7 @@
 
                             });
 
-                            // handle non-chrome/firefox
+                            // handle non-chrome/firefox browsers
                             if (L.Browser.ie && !L.Broswer.opera && !L.Browser.edge) {
 
                                 this.bringToFront();
@@ -405,22 +432,23 @@
                             }
                         });
 
-                        // when mouseout, or hover end, reset segment to original style, reset latenessInfo
+                        // when mouseout, reset segment to original style and reset latenessInfo
                         layer.on('mouseout', function() {
 
                             routeGeoJson.resetStyle(this);
                             latenessInfo.update();
 
                         });
-
+                        
+                        // give back routeGeoJSON so we can use it later.
                         return routeGeoJson                
 
                     }}).addTo(map);
 
-                //fit map extent to route extent
+                // fit map extent to route extent
                 map.fitBounds(routeGeoJson.getBounds())
 
-                //button that allows change from segment extent to route extent 
+                // button that allows change from segment extent to route extent 
                 var resetRouteView = L.Control.extend({
 
                         options: {
@@ -451,7 +479,7 @@
 
                     });
 
-                //take the mouseovered segment and fit it into the latenessInfo div accordingly
+                // take the mouseovered segment and display its data into the latenessInfo div accordingly
                 latenessInfo.update = function(props) {
 
                     // push relevent stats from mouseovered segment to dev_stats list
@@ -461,14 +489,14 @@
                         seg_stops = props.seg_stops;
                         dev_stats.push(parseInt(props.deviations_median));
                         dev_stats.push(parseInt(props.deviations_max));
-                        dev_stats.push(parseInt(props.deviations_min));
+                        dev_stats.push(parseInt(props.deviations_min))
 
                     }
 
-                    //Since a positive deviation means a bus is late, create strings latness, ontimeness, and earliness
+                    // since a positive deviation means a bus is late, create strings for lateness, ontime-ness, and earliness
                     $.each(dev_stats, function(i, item) {
 
-                    //Show bus as ahead of schedule and use proper grammar, because it matters.
+                    // show bus as ahead of schedule and use proper grammar, because it matters.
                     if(item < 0) {
 
                         if(item/-1 == 1) {
@@ -485,14 +513,14 @@
                         }
                     }
 
-                    //Say it how it is. on time.
+                    // 0 means the bus is on time. nice. 
                     else if(item == 0) {
 
                         dev_stats[i] = 'on time'
 
                     } 
 
-                    //Show bus as behind schedule, still remembering grammar.
+                    // show bus as behind schedule, still remembering grammar.
                     else {
 
                         if(item/1 == 1) {
@@ -511,10 +539,10 @@
 
                     });
 
-                    //Add strings to contents
+                    // add strings to contents
                     var contents = '<h4><b>Bus Lateness</b></h4>' + (props ? '<p><b>Segment : </b> ' + seg_stops + '</p>' + '<p><b>Median Lateness :</b> ' + dev_stats[0] + ' </p>' + '<p><b>Max Lateness : </b>' + dev_stats[1] + ' </p>' + '<p><b>Min Lateness : </b>' + dev_stats[2] + ' </p>' : '<p>Hover over route segment</p>');
 
-                    //NaN in contents means segment's deviation values were null. nulls mean no data was selected from that segment. Reflect that in contents.
+                    // NaN in contents means segment's deviation values were null. nulls mean no data was selected from that segment. reflect that in contents.
                     if(contents.includes("NaN")) {
 
                         contents = '<h4><b>Bus Lateness</b></h4>' + '<p><b>Segment : </b> ' + props.seg_stops + '</p>' + '<p><i>Data was not collected on this segment</i></p>' + '';
@@ -526,38 +554,37 @@
 
                 }
 
-                //add latenessInfo to the map
+                // add latenessInfo to the map
                 latenessInfo.addTo(map);
 
-                //return routeGeoJson to be used elsewhere.
+                // return routeGeoJson to be used elsewhere.
                 return selectedRoute   
 
             });
                 
             }
-            
 
         }
         
-        //function that populates bussesDropdown and returns list of busMarkers
+        // function that populates bussesDropdown and returns list of busMarkers
         var getBusses = function(selectedRoute) {
 
             $.getJSON(selectedRoute, function(data) {
 
                 selectedRoute = data;
 
-                //object that will hold midpoint of each route segment, the route bus's number and the times of day each bus was at a given segment
+                // object that will hold midpoint of each route segment, the route bus's number and the times of day each bus was at a given segment
                 var routeBusPnts = {};
 
-                //add seg_id, coordinates, and properties to routeBusPnts for those segments with busses
+                // add seg_id, coordinates, and properties to routeBusPnts for those segments with busses
                 $.each(selectedRoute.features, function(key,val) {
 
                     $.each(val, function(i,j) { 
 
-                        //rule out segments that did not include busses becuase null deviation indicates no busses were selected 
+                        // rule out segments that did not include busses becuase null deviation indicates no busses were selected 
                         if(val.properties.deviations_min === "null") {} 
 
-                        //add what we want to routeBusPnts for that segment
+                        // add what we want to routeBusPnts for that segment
                         else { 
 
                             routeBusPnts[val.properties.seg_id] = [val.geometry.coordinates,val.properties] 
@@ -567,14 +594,15 @@
 
                 })	
 
-                //change coordinates to midpoint of segment. eventually this should be changed to the true location of the bus (we need to chnage some R code.)
+                // change coordinates to midpoint of segment. eventually this should be changed to the true location of the bus (we need to chnage some R code.)
                 $.each(routeBusPnts, function(i,item){
 
-                    // if # points even, generate a lat,lng between middle two lat, if odd, select the middle lat/lnt
+                    // if # points is even, generate a lat,lng between middle two lat,lng. If odd, select the middle lat,lng
                     if(routeBusPnts[i][0].length % 2 == 0) { 
 
                         routeBusPnts[i][0] = [(item[0][item[0].length/2][0] + item[0][item[0].length/2 + 1][0])/2,		
                                               (item[0][item[0].length/2][1] + item[0][item[0].length/2 + 1][1])/2]
+                        
                     } 
 
                     else {
@@ -583,7 +611,7 @@
                                              item[0][(item[0].length + 1)/2][1]]
                     }
 
-                    //remove those key,val pairs where key has "dev" and do the same where key has "seg". we done need these.
+                    // remove those key,val pairs where key has "dev" and do the same where key has "seg". we don't need these.
                     for (key in item[1]) {
 
                         if(key.match("dev")) {delete item[1][key]} 
@@ -593,15 +621,15 @@
 
                 });
 
-                //list holding each timestamp for which busses were queried in 'route_lateness.R'. these times are held in keys for properties in routeGeoJson
+                // list holding each timestamp for which busses were queried in 'route_lateness.R'. these times are held in keys for properties in routeGeoJson
                 busTimes = [];
 
-                //add those query times to busTimes
+                // add those query times to busTimes
                 $.each(routeBusPnts, function(i,item) {
 
                 for(key in item[1]) {
 
-                    // times are saved like: "querytime_someotherstuff", so I grab time stamp, not the other stuff
+                    // times are saved like: "querytime_some-other-stuff", so I grab time stamp, not the other stuff
                     queryTime = key.split("_")[0]
                     if(key.match(queryTime)) {
 
@@ -611,13 +639,13 @@
 
                 }});
 
-                //extract the unique querytimes since there are duplicates.s                 
+                // extract the unique querytimes since there are duplicates               
                 busTimes = $.unique(busTimes);
 
-                //lst of l.markers representing each bus
+                // lst of L.markers representing each bus
                 busMarkers = [];   
 
-                //icon for the bus. thanks for maki mapbox
+                // icon for the bus. thanks for maki mapbox. you are the best.
                 var myIcon = L.icon({
 
                     iconUrl: 'bus_icon_blk.png',
@@ -626,7 +654,7 @@
 
                 });
 
-                //for each segment in route, find segments with queryTimes that match busTimes[i] and extract the information
+                // for each segment in route, find segments with queryTimes that match busTimes[i] and extract the information
                 $.each(routeBusPnts, function(i,item) {
 
                     for(var i = 0; i < busTimes.length; i++) {
@@ -644,12 +672,12 @@
                         }          
                     }
 
-                    //add marker, using each feature in routeBusPnt's coordinates, myIcon, the time, and title.
+                    // add marker, using each feature in routeBusPnt's coordinates, myIcon, the time, and title.
                     busMarkers.push(L.marker([item[0][1],item[0][0]], {icon: myIcon , opacity: 1, time: busTime, title:busId, riseOnHover:true}))        
 
                 });
 
-                //create busIds, with bus ids, and fill bussesDropdown with those ids
+                // create busIds, with bus ids, and fill bussesDropdown with those ids
                 var busIds = [];    
 
                 $.each(busMarkers, function(i, item) {
@@ -658,7 +686,7 @@
 
                 });
 
-                //get rid of duplicates
+                // get rid of duplicates
                 busIds = $.unique(busIds)
 
                 $.each(busIds, function(i, item) {
@@ -669,6 +697,7 @@
 
                 });
 
+                // return busMarkers so we can subset them and map them. go maps.
                 return busMarkers
 
             })                         
@@ -676,7 +705,7 @@
 
 }
         
-        // function that maps busses. busMakers map makers and Clicks & needToMapRoute do same as they do in mapLatenesss
+        // function that maps busses. busMarkers are makers to map.  Clicks & needToMapRoute do same as they do in mapLatenesss. selectedRoute (like it was with mapLateness) is the GeoJSON to map
         var mapBusses =function(selectedRoute, busMarkers, Clicks, needToMapRoute) {
             
             needToMapRoute = needToMapRoute;
@@ -687,7 +716,7 @@
 
             if(Clicks > 1) {
         
-                //when we haven't changed the route we want to map, just the bus, then empty control and take markers off the map pane
+                // when we haven't changed the route we want to map, just the bus, then empty control and take markers off the map pane
                 if($(".leaflet-marker-pane img").length == 1) {
 
                     sliderControl.getContainer().innerHTML = ''
@@ -696,7 +725,7 @@
                     
                 }
                 
-                // when wer're mapping bus location after lateness, get rid lateness control/route, and set needToMapRoute so we can map bus location
+                // when wer're mapping bus location after lateness, get rid of lateness control/route, and set needToMapRoute so we can map bus location
                 else {
 
                     latenessInfo.getContainer().innerHTML = ''
@@ -707,7 +736,7 @@
 
             }
 
-            //find those markers in busMarkers that have same BusId as that in bussesDropdown and add the markerToMap
+            // find those markers in busMarkers that have same BusId as that in bussesDropdown and add the markerToMap
             var markersToMap = [];
 
             $.each(busMarkers, function(i, item) {
@@ -720,14 +749,14 @@
 
             });
 
-            //sort markers in markersToMap by timestamp.
+            // sort markers in markersToMap by timestamp.
             markersToMap = markersToMap.sort(function(a,b) {
 
                 return new Date(a.options.time).getTime() - new Date(b.options.time).getTime()
 
             });
 
-            //add markers to map to sliderControl, add sliderControl to map, and start the slider
+            // add markers to map to sliderControl, add sliderControl to map, and start the slider
             sliderControl._layer = L.layerGroup(markersToMap);
 
             sliderControl.addTo(map);
@@ -736,7 +765,7 @@
             
             if(needToMapRoute == true) {
                 
-                //add route to map, make each segemnt white, and fit extent to bounds of route
+                // add route to map, make each segemnt white, and fit extent to bounds of route
                 routeGeoJson = $.getJSON(selectedRoute, function(data) {
                 
                 selectedRoute = data
@@ -762,11 +791,11 @@
         } 
                                 
         $(document).ready(function() {
-            
+            $('#dayMapped').hide()
             // get routes from github api
             $.getJSON("https://api.github.com/repos/maxgrossman/dclatebus/contents/viz/day_routes", function (data) {
                  
-                // append each to dropdown, displaying file name
+                // append each to dropdown, displaying route name
                  $.each(data, function(i, item) {
                      
                     $("#mapRoute").append( $("<option></option>")
@@ -787,13 +816,13 @@
                 // set header height to height of title and first dropdown
                 $('#header').height($('#headerTitle').height() + $('#varSelect').height())
                 
-                // counter to control height extensions, only allowing allowing height to be increased one time
+                // counter to control height extensions, only allowing height to be increased one time
                 selectCounter = 0
                 
-                // function that increases height and shows #rt_select div when 'variable to map' is selected
+                // function that increases height and shows #routeSelect div when 'variable to map' is selected
                 $("#varSelect").change(function() {
                     
-                    // make select_counter 1 so to control if statement to occur only once
+                    // make selectCounter 1 so to control if statement to occur only once
                     selectCounter = selectCounter + 1
                     
                     if($('#mapVariable option').is(':selected') && selectCounter == 1) {
@@ -828,8 +857,10 @@
                     
                 });
                 
+                // when routeSelect changes, meaningn user selects route to map, change header to show buttons so they can fire off the map
                 $("#routeSelect").change(function() {
                 
+                    // for bus lateness
                     if ($('#mapRoute option').is(':selected') && $('#mapVariable').val() != 2) {
                         
                         $('#header').height(210)
@@ -840,6 +871,7 @@
                         
                     }
                     
+                    // for bus location. note the busses dropdown is also shown so user can pick busses to map too
                     else if ($('#mapRoute option').is(':selected') && $('#mapVariable').val() == 2) {
                         
                         $('#header').height(265)
@@ -864,25 +896,34 @@
 
             });
                  
-            //If map button clicked first time add layers and controls per dropdown selections. If clicked second time, remove what is there and add whatever is in the dropdown.
+            // if map button clicked first time, add layers and controls per dropdown selections. If clicked second time, remove what is there and add whatever is in the dropdown.
             $("#button").on("click", function() {
                 
-                //add 1 to Clicks value each time #button is clicked. helps figure out if clicked first or second+ time.
+                // add 1 to Clicks value each time #button is clicked. helps figure out if clicked first or second + time.
                 Clicks++
                 
                 if( Clicks == 1) {
                     
-                    //save selectedRoute in previousRoute so when Clicks > 1, we can figure out if user is trying is trying to map new route or not.
+                    $('#dayMapped').show()
+                    // add date, with data from bus markers, to map
+                    timeMapped = busMarkers[1].options.time.split("-")
+                    yearMapped = timeMapped[0]
+                    monthMapped = monthNames[parseInt(timeMapped[1])-1]
+                    dayMapped = timeMapped[2].split(" ")[0].substr(1)
+                    dateMapped = monthMapped + " " + dayMapped + ", " + yearMapped
+                    $("#dayMapped").append('<p>' + dateMapped + "</p>");
+                    
+                    // save selectedRoute in previousRoute so when Clicks > 1, we can figure out if user is trying to map new route or not.
                     previousRoute = selectedRoute
                     
-                    //if lateness is selected in first dropdown, map that lateness and its controls
+                    // if lateness is selected in first dropdown, map that lateness and its controls
                     if($("#mapVariable").val() == 1) {
                        
                         mapLateness(selectedRoute, Clicks, true)
                     
                     }
                     
-                    //if bus location is selected, map markers already in the busMarkers list and the bus locatoin styled route
+                    // if bus location is selected, map markers already in the busMarkers list and the bus location styled route
                     if($("#mapVariable").val() == 2) {
                             
                         mapBusses(selectedRoute, busMarkers, Clicks, true)
@@ -905,22 +946,22 @@
                                   
                         }
                         
-                        //if not, give pointer to mapLateness is still trying to map the same route. mapLatness, thanks to needToMapRoute will figure out if its late or bus loc.
+                        // if not, give pointer to mapLateness is still trying to map the same route. mapLatness, thanks to needToMapRoute will figure out if its late or bus loc.
                         else {
                             
                             mapLateness(selectedRoute, Clicks, false)
                             
                         }
                         
-                        //set selectedROute to previousRoute, so if they try to map new route or keep it the same, it will be handed
+                        // set selectedRoute to previousRoute, so if they try to map new route or keep it the same, it will be handed
                         previousRoute = selectedRoute 
                              
                     }
                     
-                    //if bus locations was selected
+                    // if bus locations was selected
                     else if ($("#mapVariable").val() == 2) {
                         
-                        //if new route, get rid of old one, and map the new
+                        // if new route, get rid of old one, and map the new
                         if(previousRoute != selectedRoute) {
                         
                             routeGeoJson.clearLayers();
@@ -928,7 +969,7 @@
                             
                         } 
                         
-                        //if same route, just like with lateness, give pointer its a new route and let mapBusses figure out if lateness or bus location.
+                        // if same route, just like with lateness, give pointer its a new route and let mapBusses figure out if lateness or bus location.
                         else {
                             
                             mapBusses(selectedRoute, busMarkers, Clicks, false)
