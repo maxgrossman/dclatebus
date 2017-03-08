@@ -419,15 +419,15 @@ for( i in 1:length(db_dir_routes)) {
       
       if ( dir_schema == "dir0routes") {
         
-        file_path_geojson <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir0routes/dailygeojson/",Sys.Date(),"/",route_id,".geojson", sep = "")
-        file_path_csv <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir0routes/dailycsv/",Sys.Date(),"/",route_id,".csv", sep = "")
+        file_path_geojson <- paste("",Sys.Date(),"/",route_id,".geojson", sep = "")
+        file_path_csv <- paste("",Sys.Date(),"/",route_id,".csv", sep = "")
         
       }  
       
       if ( dir_schema == "dir1routes") {
         
-        file_path_geojson <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir1routes/dailygeojson/",Sys.Date(),"/",route_id,".geojson", sep = "")
-        file_path_csv <- paste("/Users/maxgrossman/github/maxgrossman/dclatebus/data/dir1routes/dailycsv/",Sys.Date(),"/",route_id,".csv", sep = "")
+        file_path_geojson <- paste("",Sys.Date(),"/",route_id,".geojson", sep = "")
+        file_path_csv <- paste("",Sys.Date(),"/",route_id,".csv", sep = "")
       }
       
       write(route_geojson, file_path_geojson)
